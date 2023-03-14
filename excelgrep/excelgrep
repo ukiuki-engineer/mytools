@@ -1,0 +1,48 @@
+#!/bin/bash
+
+# 引数からgrepの操作内容を取り出す
+for arg in ${@}; do
+  if [ $(echo ${arg} | grep -vE '\.xlsx$|\.xls$') ]; then
+    # FIXME シングルクォーテーションが消えてしまう
+    operation=${operation}" "${arg}
+  fi
+done
+
+# 一つ一つのxlsxファイルに対してgrepする
+for arg in ${@}; do
+  # *.xlsx以外の引数の場合次のループへ
+  if [ $(echo ${arg} | grep -vE '\.xlsx$|\.xls$') ]; then
+    continue
+  fi
+
+  # zip展開用一時ディレクトリ作成
+  tmpdir=$(mktemp -d)
+  # grepの標準出力用一時ファイル作成
+  tmpgrep=$(mktemp)
+
+  # エクセルファイルを一時ディレクトリに解凍する
+  # 標準出力とエラー出力は鬱陶しいので捨てる
+  unzip ${arg} -d ${tmpdir} 1> /dev/null 2>&1
+
+  # 全xmlファイルにgrepする
+  find ${tmpdir} -type f |
+    grep -E 'xml$' |
+    xargs -I{} grep ${operation} {} |
+    tr '\"' '\n' |
+    tr '>' '\n' |
+    sed -e 's/<\/.*//' |
+    grep ${operation} > ${tmpgrep}
+
+  # 検索文字列があればファイル名とその内容を出力する
+  if [ $? = 0 ]; then
+    # FIXME
+    # awkを使って出力しているので、
+    # grepの--color=autoが効かない
+    cat ${tmpgrep} | awk '{print filename": "$0}' filename=${arg}
+  fi
+
+  # 一時ディレクトリとファイルを削除
+  rm -r ${tmpdir}
+  rm ${tmpgrep}
+
+done
