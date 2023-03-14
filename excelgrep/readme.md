@@ -40,3 +40,7 @@ find . -type f | grep -E 'xlsx$' | xargs -I{} excelgrep '検索文字列' {}
 例)大文字小文字を区別しないor検索
 excelgrep -iE '検索文字列1|検索文字列2' *.xlsx
 ```
+
+## TODO
+- 流石にもう少し整理したい
+- Office全般に使えるように拡張したい
