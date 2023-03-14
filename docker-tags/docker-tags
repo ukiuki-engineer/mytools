@@ -1,0 +1,41 @@
+#!/bin/sh
+# 2022/09/18
+
+# 問い合わせ回数を取得
+num=$(echo $@ | tr ' ' '\n' | grep '\-n' | tr -d '\-n')
+# ページ番号を取得
+page=$(echo $@ | tr ' ' '\n' | grep '\-page' | tr -d '\-page')
+
+# 指定されたページ番号に問い合わせ
+if [ -n "${page}" ]; then
+  curl -s "https://hub.docker.com/v2/repositories/library/${1}/tags/?page_size=100&page=${page}" |
+    sed -e 's/,/\n/g' |
+    grep -E 'architecture|\"name\":' |
+    tac |
+    tr -d '\n' |
+    sed -e 's/\"images\"//g' -e 's/\"name\":/\n/g' -e 's/{\"architecture\"//g' -e 's/\"//g' -e 's/\[://g' -e 's/:/ /g' |
+    awk '{print $1":"$2,$3,$4,$5,$6,$7,$8,$9,$10}' |
+    tac |
+    sed -e 's/ *$//g' -e 's/ /, /g' -e 's/^:$//'
+  # 処理終了
+  exit 0
+fi
+
+# 問い合わせ回数が指定されていなければデフォルトで1とする
+if [ -z "${num}" ]; then
+  num=1
+fi
+
+# 1ページ目から指定された回数のページまでを表示
+seq ${num} | while read -r line; do
+  curl -s "https://hub.docker.com/v2/repositories/library/${1}/tags/?page_size=100&page=${line}" |
+    sed -e 's/,/\n/g' |
+    grep -E 'architecture|\"name\":' |
+    tac |
+    tr -d '\n' |
+    sed -e 's/\"images\"//g' -e 's/\"name\":/\n/g' -e 's/{\"architecture\"//g' -e 's/\"//g' -e 's/\[://g' -e 's/:/ /g' |
+    awk '{print $1":"$2,$3,$4,$5,$6,$7,$8,$9,$10}' |
+    tac |
+    sed -e 's/ *$//g' -e 's/ /, /g' -e 's/^:$//' |
+    grep -vE '^$'
+done
