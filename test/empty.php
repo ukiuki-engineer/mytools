@@ -1,13 +1,19 @@
 <?php
 // 空判定・null判定について
 // if(!empty($v))とif($v)の比較
+
 print '////////////////////////////////////////////////////////////////////////////' . "\n";
 print "// 空判定・null判定について\n";
 print '// if(!empty($v))とif($v)の比較' . "\n";
 print '////////////////////////////////////////////////////////////////////////////' . "\n";
-$output = null;
-exec("php -v", $output);
-print_r($output);
+
+// version情報出力
+$outputs = null;
+exec("php -v", $outputs);
+// print_r($output);
+foreach ($outputs as $output) {
+    print "$output\n";
+}
 
 /**
  * 空文字
