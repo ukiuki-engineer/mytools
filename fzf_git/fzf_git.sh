@@ -209,6 +209,7 @@ __status_actions() {
 
   local changes=$*
   local header="Enter: select action, <: back"
+  local header_lines="selected changes: "$(echo $changes | awk '{print $2", "}' | tr -d '\n' | sed -e 's/, $//')
   local tmp=$(mktemp)
 
   # 選択肢
@@ -221,13 +222,16 @@ __status_actions() {
 
   # 選択
   local action=$(
-    echo $actions \
+    (
+      echo $header_lines
+      echo $actions
+    ) \
       | fzf \
         --border \
         --border-label 'Status Actions' \
         --header $header \
+        --header-lines 1 \
         --height=20% \
-        --prompt="\"$changes\">" \
         --bind="<:execute(echo 'back' > $tmp)+accept"
   )
 
