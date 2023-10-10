@@ -76,7 +76,7 @@ _fzf_git_status() {
     fi
   '
 
-  statuses=$(
+  changes=$(
     git -c color.status=always status --porcelain -s --find-renames \
       | fzf \
         --multi \
@@ -95,7 +95,7 @@ _fzf_git_status() {
   )
 
   # 選択されてなければ中断
-  if [[ -z $statuses ]]; then
+  if [[ -z $changes ]]; then
     rm $tmp
     return 1
   fi
@@ -103,7 +103,7 @@ _fzf_git_status() {
   # select action
   if [[ $(cat $tmp) =~ 'select-action' ]]; then
     rm $tmp
-    __status_actions $branch
+    __status_actions $changes
     return
   fi
 
@@ -114,7 +114,7 @@ _fzf_git_status() {
     return
   fi
 
-  echo $statuses
+  echo $changes
 }
 # ------------------------------------------------------------------------------
 # branchに対するaction
