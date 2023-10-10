@@ -203,10 +203,53 @@ __checkout() {
 }
 
 __status_actions() {
-  # TODO: add
-  # TODO: stash
-  # TODO: reset
-  echo "TODO: __status_actions()"
+  # 引数無しだとエラー
+  if [[ $# -eq 0 ]]; then
+    return 1
+  fi
+
+  local changes=$*
+  local header="Enter: select action, <: back"
+  local tmp=$(mktemp)
+
+  # 選択肢
+  actions="
+    add,
+    reset,
+    stash,
+  "
+  actions=$(echo $actions | sed -e 's/,/\n/g' -e 's/ //g' | grep -vE '^$')
+
+  # 選択
+  local action=$(
+    echo $actions \
+      | fzf \
+        --border \
+        --border-label 'Status Actions' \
+        --header $header \
+        --height=20% \
+        --prompt="\"$changes\">" \
+        --bind="<:execute(echo 'back' > $tmp)+accept"
+  )
+
+  # ここからactionの処理
+  if [[ $action == "add" ]]; then
+    # add
+    echo $changes | while read -r change; do
+      git add $change
+    done
+    _fzf_git_status
+  elif [[ $action == "reset" ]]; then
+    # reset
+    echo $changes | while read -r change; do
+      # git reset $changes
+      echo "TODO: reset"
+    done
+    _fzf_git_status
+  elif [[ $action == "stash" ]]; then
+    # stash
+    echo "TODO: stash"
+  fi
 }
 # ------------------------------------------------------------------------------
 alias gitBranches='_fzf_git_branches'
