@@ -213,8 +213,8 @@ __status_actions() {
 
   # 選択肢
   actions="
-    add,
-    reset,
+    stage,
+    unstage,
     stash,
   "
   actions=$(echo $actions | sed -e 's/,/\n/g' -e 's/ //g' | grep -vE '^$')
@@ -232,15 +232,15 @@ __status_actions() {
   )
 
   # ここからactionの処理
-  if [[ $action == "add" ]]; then
-    # add
+  if [[ $action == "stage" ]]; then
+    # stage
     echo $changes | while read -r change; do
       change=$(echo $change | awk '{print $2}')
       git add $change
     done
     _fzf_git_status
-  elif [[ $action == "reset" ]]; then
-    # reset
+  elif [[ $action == "unstage" ]]; then
+    # unstage
     echo $changes | while read -r change; do
       change_kind=$(echo $change | awk '{print $1}')
       change_file=$(echo $change | awk '{print $2}')
