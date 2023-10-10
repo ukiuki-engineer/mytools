@@ -90,8 +90,7 @@ _fzf_git_status() {
         --bind="ctrl-a:execute(git add . && echo 'stage-all' > $tmp)+accept" \
         --bind="ctrl-u:execute(git reset && echo 'unstage-all' > $tmp)+accept" \
         --preview $preview \
-        --preview-window='right,70%' \
-      | awk '{print $2}'
+        --preview-window='right,70%'
   )
 
   # 選択されてなければ中断
@@ -236,14 +235,23 @@ __status_actions() {
   if [[ $action == "add" ]]; then
     # add
     echo $changes | while read -r change; do
+      change=$(echo $change | awk '{print $2}')
       git add $change
     done
     _fzf_git_status
   elif [[ $action == "reset" ]]; then
     # reset
     echo $changes | while read -r change; do
-      # git reset $changes
-      echo "TODO: reset"
+      change_kind=$(echo $change | awk '{print $1}')
+      change_file=$(echo $change | awk '{print $2}')
+      if [[ $change_kind == "R" ]]; then
+        # renameをunsgageする
+        change_file_after_rename=$(echo $change | sed -e 's/.*-> //')
+        git restore --staged $change_file $change_file_after_rename
+      else
+        # rename以外をunstageする
+        git reset $change_file
+      fi
     done
     _fzf_git_status
   elif [[ $action == "stash" ]]; then
