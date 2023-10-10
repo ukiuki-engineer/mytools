@@ -49,7 +49,3 @@ source (path to this script)
 - [fzf-git.sh](https://github.com/junegunn/fzf-git.sh)
 - [fzf-preview.vim](https://github.com/yuki-yano/fzf-preview.vim)
 
-## TODO
-- [ ] stage-all, unstage-allを選択肢に入れる
-- [ ] actions: headerを2行にして、選択したやつを表示するように
-- [ ] promptを整理

@@ -213,6 +213,14 @@ __status_actions() {
   local tmp=$(mktemp)
 
   # 選択肢
+  # TODO: $changesの中身によって選択肢を変える
+  # →stage済み
+  #   - unstage
+  # →stageされていない
+  #   - stage
+  #   - discard
+  #   - stash
+  # →混合の場合、警告を出して元の画面に戻る
   actions="
     stage,
     unstage,
