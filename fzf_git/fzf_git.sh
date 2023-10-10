@@ -60,7 +60,7 @@ _fzf_git_branches() {
   __checkout $branch
 }
 
-# statuses
+# status
 _fzf_git_status() {
   local tmp=$(mktemp)
   local header="CTRL-a: Stage all, CTRL-u: Unstage all, >: Select action"
