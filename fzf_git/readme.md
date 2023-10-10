@@ -51,5 +51,5 @@ source (path to this script)
 
 ## TODO
 - [ ] stage-all, unstage-allを選択肢に入れる
-- [ ] 
-- [ ] 
+- [ ] actions: headerを2行にして、選択したやつを表示するように
+- [ ] promptを整理
