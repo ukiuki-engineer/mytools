@@ -35,7 +35,7 @@ _fzf_git_branches() {
         --height=80% \
         --header $header \
         --preview $preview \
-        --preview-window='right,70%' \
+        --preview-window='right,50%' \
         --bind=">:execute(echo 'select-action' > $tmp)+accept" \
       | sed -e 's/\*//' \
       | awk '{print $1}'
@@ -90,7 +90,7 @@ _fzf_git_status() {
         --bind="ctrl-a:execute(git add . && echo 'stage-all' > $tmp)+accept" \
         --bind="ctrl-u:execute(git reset && echo 'unstage-all' > $tmp)+accept" \
         --preview $preview \
-        --preview-window='right,70%'
+        --preview-window='right,50%'
   )
 
   # 選択されてなければ中断
