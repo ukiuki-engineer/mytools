@@ -243,6 +243,21 @@ __status_actions() {
         --bind="<:execute(echo 'back' > $tmp)+accept"
   )
 
+  # 選択されてなければ中断
+  if [[ -z $action ]]; then
+    rm $tmp
+    return 1
+  fi
+
+  # back
+  if [[ $(cat $tmp) =~ 'back' ]]; then
+    rm $tmp
+    _fzf_git_status
+    return
+  fi
+
+  rm $tmp
+
   # ここからactionの処理
   if [[ $action == "stage" ]]; then
     # stage
