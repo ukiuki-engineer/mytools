@@ -6,7 +6,7 @@ fzfによるgit操作ツール。
 
 https://github.com/ukiuki-engineer/mytools/assets/101523180/2d447763-b416-4d83-8fa1-4d6ba83c3d41
 
-- `gitStatuses`
+- `gitStatus`
 
 https://github.com/ukiuki-engineer/mytools/assets/101523180/90278963-0475-4f87-9f40-943e313f2abe
 
