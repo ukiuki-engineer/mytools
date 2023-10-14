@@ -63,7 +63,7 @@ _fzf_git_branches() {
 # status
 _fzf_git_status() {
   local tmp=$(mktemp)
-  local header="CTRL-a: Stage all, CTRL-u: Unstage all, >: Select action"
+  local header="CTRL-s: Stage all, CTRL-u: Unstage all, >: Select action"
   local preview='
     if echo {} | grep -E "^ M|^ D" >/dev/null; then
       git -c color.diff=always diff -- {2}
@@ -87,7 +87,7 @@ _fzf_git_status() {
         --header $header \
         --bind="tab:toggle+down" \
         --bind=">:execute(echo 'select-action' > $tmp)+accept" \
-        --bind="ctrl-a:execute(git add . && echo 'stage-all' > $tmp)+accept" \
+        --bind="ctrl-s:execute(git add . && echo 'stage-all' > $tmp)+accept" \
         --bind="ctrl-u:execute(git reset && echo 'unstage-all' > $tmp)+accept" \
         --preview $preview \
         --preview-window='right,50%'
