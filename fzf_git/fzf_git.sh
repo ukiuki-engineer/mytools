@@ -212,8 +212,7 @@ __status_actions() {
   local header_lines="selected changes: "$(echo $changes | awk '{print $2", "}' | tr -d '\n' | sed -e 's/, $//')
   local tmp=$(mktemp)
 
-  # 選択肢
-  # TODO: $changesの中身によって選択肢を変える
+  # TODO: $changesの中身によって選択肢を変える(今は一旦いいや...)
   # →stage済み
   #   - unstage
   # →stageされていない
@@ -221,6 +220,36 @@ __status_actions() {
   #   - discard
   #   - stash
   # →混合の場合、警告を出して元の画面に戻る
+
+  # local staged_changes=""
+  # git diff --cached --name-only | while read -r line; do
+  #   if [[ $staged_changes == "" ]]; then
+  #     staged_changes="$line"
+  #   else
+  #     staged_changes="$staged_changes|$line"
+  #   fi
+  # done
+
+  # if [[ condition ]]; then
+
+  # fi
+  # if ! echo $changes | grep -E $staged_changes >/dev/null; then
+  #   # 全部未ステージ
+  #   echo "全部未ステージ"
+  # else
+  #   local count_changes=$(echo $changes | wc -l)
+  #   local count_staged_changes=$(echo $staged_changes | wc -l)
+  #   if [[ $count_changes -eq $count_staged_changes ]]; then
+  #     # 全部ステージ済み
+  #     echo "全部ステージ済み"
+  #   else
+  #     # 混合
+  #     # TODO: 同じファイルでstage済みと未stageが混在している場合に対応させる
+  #     echo "混合"
+  #   fi
+
+  # fi
+
   actions="
     stage,
     unstage,

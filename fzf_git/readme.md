@@ -56,3 +56,4 @@ source (path to this script)
   - [ ] actionを選択肢によって変える
   →作業中
   - [ ] `delete changes`を追加
+  - [ ] `delete latest commit`を追加
