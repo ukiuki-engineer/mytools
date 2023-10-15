@@ -43,7 +43,6 @@ source (path to this script)
 以下のコマンドが使用可能。
 - `gitBranches`
 - `gitStatus`
-→まだ実装中。
 
 ## Inspired By
 - [fzf-git.sh](https://github.com/junegunn/fzf-git.sh)
