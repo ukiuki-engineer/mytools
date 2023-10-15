@@ -50,10 +50,5 @@ source (path to this script)
 - [fzf-preview.vim](https://github.com/yuki-yano/fzf-preview.vim)
 
 ## TODO
-- gitBranches
-  - [ ] `create a new branch`を追加
 - gitStatus
-  - [ ] actionを選択肢によって変える
-  →作業中
-  - [ ] `delete changes`を追加
-  - [ ] `delete latest commit`を追加
+  - [ ] 選択された変更を削除

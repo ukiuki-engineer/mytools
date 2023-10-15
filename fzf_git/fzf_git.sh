@@ -21,12 +21,15 @@ _fzf_git_branches() {
   '
 
   # 選択
-  local branch=$(
-    git branch -a \
-      --sort=-committerdate \
-      --sort=-HEAD \
-      --color=always \
-      --format=$'%(HEAD) %(color:yellow)%(refname:short)\t%(color:green)%(committerdate:short)\t%(color:blue)%(subject)%(color:reset)' \
+  local selected_all=$(
+    (
+      echo -e "\e[35;1mCreate a new branch"
+      git branch -a \
+        --sort=-committerdate \
+        --sort=-HEAD \
+        --color=always \
+        --format=$'%(HEAD) %(color:yellow)%(refname:short)\t%(color:green)%(committerdate:short)\t%(color:blue)%(subject)%(color:reset)'
+    ) \
       | column -ts$'\t' \
       | fzf \
         --ansi \
@@ -37,27 +40,34 @@ _fzf_git_branches() {
         --preview $preview \
         --preview-window='right,50%' \
         --bind=">:execute(echo 'select-action' > $tmp)+accept" \
-      | sed -e 's/\*//' \
-      | awk '{print $1}'
+      | sed -e 's/\*//'
   )
 
   # 選択されてなければ中断
-  if [[ -z $branch ]]; then
+  if [[ -z $selected_all ]]; then
     rm $tmp
     return 1
   fi
 
+  selected=$(echo $selected_all | awk '{print $1}')
+
   # select action
   if [[ $(cat $tmp) =~ 'select-action' ]]; then
     rm $tmp
-    __branch_actions $branch
+    __branch_actions $selected
     return
   fi
 
   rm $tmp
 
-  # checkout
-  __checkout $branch
+  if [[ $selected_all =~ "Create a new branch" ]]; then
+    # create a new branch
+    __create_new_branch
+    return
+  else
+    # checkout
+    __checkout $selected
+  fi
 }
 
 # status
@@ -76,8 +86,12 @@ _fzf_git_status() {
     fi
   '
 
-  changes=$(
-    git -c color.status=always status --porcelain -s --find-renames \
+  selected=$(
+    (
+      echo -e "\e[35;1mDelete latest commit"
+      echo -e "\e[35;1mDiscard all changes"
+      git -c color.status=always status --porcelain -s --find-renames
+    ) \
       | fzf \
         --multi \
         --ansi \
@@ -94,7 +108,7 @@ _fzf_git_status() {
   )
 
   # 選択されてなければ中断
-  if [[ -z $changes ]]; then
+  if [[ -z $selected ]]; then
     rm $tmp
     return 1
   fi
@@ -102,7 +116,7 @@ _fzf_git_status() {
   # select action
   if [[ $(cat $tmp) =~ 'select-action' ]]; then
     rm $tmp
-    __status_actions $changes
+    __status_actions $selected
     return
   fi
 
@@ -113,7 +127,28 @@ _fzf_git_status() {
     return
   fi
 
-  echo $changes
+  # 最新のcommitを取消する
+  if [[ $selected == "Delete latest commit" ]]; then
+    git reset --soft HEAD^
+  elif [[ $selected == "Discard all changes" ]]; then
+    # 変更ごとに処理
+    git status --porcelain --find-renames | while read -r line; do
+      change_kind=$(echo $line | awk '{print $1}')
+      change_file=$(echo $line | awk '{print $2}')
+      if [[ $change_kind == "??" ]]; then
+        # untrackedなfileは削除
+        rm $change_file
+      else
+        # その他はrestore
+        git restore $change_file
+      fi
+    done
+    # 開き直し
+    _fzf_git_status
+    return
+  fi
+
+  echo $selected
 }
 # ------------------------------------------------------------------------------
 # branchに対するaction
@@ -199,6 +234,13 @@ __checkout() {
     # local
     git checkout $branch
   fi
+}
+
+__create_new_branch() {
+  echo -n "Enter a name for the new branch: "
+  read new_branch
+  git checkout -b $new_branch
+  echo "Created and checked out new branch: $new_branch_name"
 }
 
 __status_actions() {
