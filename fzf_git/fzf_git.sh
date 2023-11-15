@@ -150,6 +150,23 @@ _fzf_git_status() {
 
   echo $selected
 }
+
+# logs
+# logと差分のプレビューだけ。actionは特になし。
+_fzf_git_logs() {
+  git log \
+    --oneline \
+    --graph \
+    --date=format:"%Y/%m/%d %H:%M:%S" \
+    --color=always \
+    --pretty="%C(auto)%h %C(blue)%ad %C(green)[%an]%C(reset) %s" \
+    | fzf \
+      --ansi \
+      --border \
+      --preview 'git diff {2} --color=always' \
+      --preview-window='right,50%'
+
+}
 # ------------------------------------------------------------------------------
 # branchに対するaction
 __branch_actions() {
@@ -360,3 +377,4 @@ __status_actions() {
 # ------------------------------------------------------------------------------
 alias gitBranches='_fzf_git_branches'
 alias gitStatus='_fzf_git_status'
+alias gitLogs='_fzf_git_logs'
