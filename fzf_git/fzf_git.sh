@@ -372,6 +372,7 @@ __status_actions() {
   elif [[ $action == "stash" ]]; then
     # stash
     echo "TODO: stash"
+    # TODO: stash操作の参考→https://qiita.com/chihiro/items/f373873d5c2dfbd03250
   fi
 }
 # ------------------------------------------------------------------------------
