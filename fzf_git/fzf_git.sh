@@ -287,6 +287,7 @@ __status_actions() {
     stage,
     unstage,
     stash,
+    discard,
   "
   actions=$(echo $actions | sed -e 's/,/\n/g' -e 's/ //g' | grep -vE '^$')
 
@@ -327,7 +328,6 @@ __status_actions() {
       change=$(echo $change | awk '{print $2}')
       git add $change
     done
-    _fzf_git_status
   elif [[ $action == "unstage" ]]; then
     # unstage
     echo $changes | while read -r change; do
@@ -342,12 +342,19 @@ __status_actions() {
         git reset $change_file
       fi
     done
-    _fzf_git_status
   elif [[ $action == "stash" ]]; then
     # stash
     echo "TODO: stash"
     # TODO: stash操作の参考→https://qiita.com/chihiro/items/f373873d5c2dfbd03250
+  elif [[ $action == "discard" ]]; then
+    # TODO: できれば変更を破棄する前にconfirmを入れたい。ここだけじゃなく他のactionも...
+    echo $changes | while read -r change; do
+      __discard_change $change
+    done
   fi
+
+  # 開き直し
+  _fzf_git_status
 }
 
 # checkoutする

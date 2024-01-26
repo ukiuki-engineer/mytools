@@ -51,5 +51,4 @@ source (path to this script)
 ## TODO
 - [ ] `Create a new branch`などのactionのプレビューを表示しようとしてバグっているので修正する
 - gitStatus
-  - [ ] 選択された変更を削除
   - [ ] 同じファイルでstaged/unstagedが混ざっている場合は、1行じゃなくて分けた方が良いかも
