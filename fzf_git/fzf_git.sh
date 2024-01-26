@@ -8,9 +8,9 @@ _fzf_git_branches() {
     return 1
   fi
 
-  local tmp=$(mktemp)
-  local header="Enter: checkout, >: Select action"
-  local preview='
+  tmp=$(mktemp)
+  header="Enter: checkout, >: Select action"
+  preview='
     git log  \
     --oneline \
     --graph \
@@ -21,7 +21,7 @@ _fzf_git_branches() {
   '
 
   # 選択
-  local selected_all=$(
+  selected_all=$(
     (
       echo -e "\e[35;1mCreate a new branch"
       git branch -a \
@@ -72,9 +72,9 @@ _fzf_git_branches() {
 
 # status
 _fzf_git_status() {
-  local tmp=$(mktemp)
-  local header="CTRL-s: Stage all, CTRL-u: Unstage all, >: Select action"
-  local preview='
+  tmp=$(mktemp)
+  header="CTRL-s: Stage all, CTRL-u: Unstage all, >: Select action"
+  preview='
     if echo {} | grep -E "^ M|^ D" >/dev/null; then
       git -c color.diff=always diff -- {2}
     elif echo {} | grep -E "^M|^D" >/dev/null; then
@@ -168,9 +168,9 @@ __branch_actions() {
     return 1
   fi
 
-  local branch=$1
-  local header="Enter: select action, <: back"
-  local tmp=$(mktemp)
+  branch=$1
+  header="Enter: select action, <: back"
+  tmp=$(mktemp)
 
   # 選択肢
   actions="
@@ -184,7 +184,7 @@ __branch_actions() {
   actions=$(echo $actions | sed -e 's/,/\n/g' -e 's/ //g' | grep -vE '^$')
 
   # 選択
-  local action=$(
+  action=$(
     echo $actions \
       | fzf \
         --border \
@@ -240,10 +240,10 @@ __status_actions() {
     return 1
   fi
 
-  local changes=$*
-  local header="Enter: select action, <: back"
-  local header_lines="selected changes: "$(echo $changes | awk '{print $2", "}' | tr -d '\n' | sed -e 's/, $//')
-  local tmp=$(mktemp)
+  changes=$*
+  header="Enter: select action, <: back"
+  header_lines="selected changes: "$(echo $changes | awk '{print $2", "}' | tr -d '\n' | sed -e 's/, $//')
+  tmp=$(mktemp)
 
   # TODO: $changesの中身によって選択肢を変える(今は一旦いいや...)
   # →stage済み
@@ -254,7 +254,7 @@ __status_actions() {
   #   - stash
   # →混合の場合、警告を出して元の画面に戻る
 
-  # local staged_changes=""
+  # staged_changes=""
   # git diff --cached --name-only | while read -r line; do
   #   if [[ $staged_changes == "" ]]; then
   #     staged_changes="$line"
@@ -270,8 +270,8 @@ __status_actions() {
   #   # 全部未ステージ
   #   echo "全部未ステージ"
   # else
-  #   local count_changes=$(echo $changes | wc -l)
-  #   local count_staged_changes=$(echo $staged_changes | wc -l)
+  #   count_changes=$(echo $changes | wc -l)
+  #   count_staged_changes=$(echo $staged_changes | wc -l)
   #   if [[ $count_changes -eq $count_staged_changes ]]; then
   #     # 全部ステージ済み
   #     echo "全部ステージ済み"
@@ -292,7 +292,7 @@ __status_actions() {
   actions=$(echo $actions | sed -e 's/,/\n/g' -e 's/ //g' | grep -vE '^$')
 
   # 選択
-  local action=$(
+  action=$(
     (
       echo $header_lines
       echo $actions
@@ -359,7 +359,7 @@ __status_actions() {
 
 # checkoutする
 __checkout() {
-  local branch=$1
+  branch=$1
   if [[ $branch =~ 'origin' ]]; then
     # origin
     git checkout -t $branch
