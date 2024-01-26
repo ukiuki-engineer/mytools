@@ -133,15 +133,8 @@ _fzf_git_status() {
   elif [[ $selected == "Discard all changes" ]]; then
     # 変更ごとに処理
     git status --porcelain --find-renames | while read -r line; do
-      change_kind=$(echo $line | awk '{print $1}')
-      change_file=$(echo $line | awk '{print $2}')
-      if [[ $change_kind == "??" ]]; then
-        # untrackedなfileは削除
-        rm $change_file
-      else
-        # その他はrestore
-        git restore $change_file
-      fi
+      # 変更を削除
+      __discard_change $line
     done
     # 開き直し
     _fzf_git_status
@@ -375,6 +368,21 @@ __create_new_branch() {
   read new_branch
   git checkout -b $new_branch
   echo "Created and checked out new branch: $new_branch_name"
+}
+
+# 変更を削除する
+__discard_change() {
+  # NOTE: 何故か$1, $2と分離してなくて$1にまとまってたから分離させる...
+  change_kind=$(echo $1 | awk '{print $1}')
+  change_file=$(echo $1 | awk '{print $2}')
+
+  if [[ $change_kind == "??" ]]; then
+    # untrackedなfileは削除
+    rm $change_file
+  else
+    # その他はrestore
+    git restore $change_file
+  fi
 }
 # ------------------------------------------------------------------------------
 alias gitBranches='_fzf_git_branches'
