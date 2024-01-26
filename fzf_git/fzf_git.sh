@@ -241,25 +241,6 @@ __branch_actions() {
   fi
 }
 
-# checkoutする
-__checkout() {
-  local branch=$1
-  if [[ $branch =~ 'origin' ]]; then
-    # origin
-    git checkout -t $branch
-  else
-    # local
-    git checkout $branch
-  fi
-}
-
-__create_new_branch() {
-  echo -n "Enter a name for the new branch: "
-  read new_branch
-  git checkout -b $new_branch
-  echo "Created and checked out new branch: $new_branch_name"
-}
-
 __status_actions() {
   # 引数無しだとエラー
   if [[ $# -eq 0 ]]; then
@@ -374,6 +355,26 @@ __status_actions() {
     echo "TODO: stash"
     # TODO: stash操作の参考→https://qiita.com/chihiro/items/f373873d5c2dfbd03250
   fi
+}
+
+# checkoutする
+__checkout() {
+  local branch=$1
+  if [[ $branch =~ 'origin' ]]; then
+    # origin
+    git checkout -t $branch
+  else
+    # local
+    git checkout $branch
+  fi
+}
+
+# 新規ブランチを作成する
+__create_new_branch() {
+  echo -n "Enter a name for the new branch: "
+  read new_branch
+  git checkout -b $new_branch
+  echo "Created and checked out new branch: $new_branch_name"
 }
 # ------------------------------------------------------------------------------
 alias gitBranches='_fzf_git_branches'
