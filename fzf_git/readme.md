@@ -56,3 +56,5 @@ source (path to this script)
 - [ ] `Create a new branch`などのactionのプレビューを表示しようとしてバグっているので修正する
 - gitStatus
   - [ ] 同じファイルでstaged/unstagedが混ざっている場合は、1行じゃなくて分けた方が良いかも
+- gitBranches
+    - [ ] リモートブランチへのcheckoutにも対応させる
