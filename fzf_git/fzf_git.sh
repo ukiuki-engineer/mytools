@@ -139,15 +139,23 @@ _fzf_git_status() {
     return
   fi
 
-  # 最新のcommitを取消する
   if [[ $selected == "Delete latest commit" ]]; then
-    git reset --soft HEAD^
+    # 最新のcommitを取消
+    if __confirm "最新のcommitを取消して変更をステージングに戻しますか？"; then
+      git reset --soft HEAD^
+    fi
+    # 開き直し
+    _fzf_git_status
+    return
   elif [[ $selected == "Discard all changes" ]]; then
-    # 変更ごとに処理
-    git status --porcelain --find-renames | while read -r line; do
-      # 変更を削除
-      __discard_change $line
-    done
+    # 全ての変更を破棄
+    if __confirm "全ての変更を破棄しますか？"; then
+      # 変更ごとに処理
+      git status --porcelain --find-renames | while read -r line; do
+        # 変更を削除
+        __discard_change $line
+      done
+    fi
     # 開き直し
     _fzf_git_status
     return
@@ -403,6 +411,20 @@ __discard_change() {
   else
     # その他はrestore
     git restore $change_file
+  fi
+}
+
+# 確認メッセージを表示する
+# Parameters:
+#   - $1: 確認メッセージ
+__confirm() {
+  echo -n "$1 (y/n)"
+  read -r reply
+  echo # 改行
+  if [[ $reply =~ ^[Yy]$ ]]; then
+    return 0
+  else
+    return 1
   fi
 }
 # ------------------------------------------------------------------------------
