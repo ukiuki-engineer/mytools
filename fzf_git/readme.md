@@ -50,6 +50,10 @@ source (path to this script)
 - [fzf-preview.vim](https://github.com/yuki-yano/fzf-preview.vim)
 
 ## TODO
+- [ ] 変更を破棄する場合など、誤操作するとマズイ箇所には、操作前にconfirmを入れるようにする
+→`__confirm`という関数を作ったのでそれ使ってif噛ませるだけ
+- [ ] 各関数に引数の説明を書いておく
 - [ ] `Create a new branch`などのactionのプレビューを表示しようとしてバグっているので修正する
 - gitStatus
+  - [ ] promptに未pullと未pushのcommit数を表示する
   - [ ] 同じファイルでstaged/unstagedが混ざっている場合は、1行じゃなくて分けた方が良いかも

@@ -83,6 +83,7 @@ _fzf_git_branches() {
 }
 
 # status
+# TODO: promptに未pullと未pushのcommit数を表示する
 _fzf_git_status() {
   tmp=$(mktemp)
   header="CTRL-s: Stage all, CTRL-u: Unstage all, >: Select action"
@@ -111,6 +112,7 @@ _fzf_git_status() {
         --border-label 'Git Status' \
         --height=80% \
         --header $header \
+        --prompt="TODO: 未pullと未pushのcommit数を表示>" \
         --bind="tab:toggle+down" \
         --bind=">:execute(echo 'select-action' > $tmp)+accept" \
         --bind="ctrl-s:execute(git add . && echo 'stage-all' > $tmp)+accept" \
