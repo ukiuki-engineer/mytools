@@ -84,6 +84,11 @@ _fzf_git_branches() {
 
 # status
 _fzf_git_status() {
+  # git projectでなければ終了する
+  if ! git status >/dev/null; then
+    return 1
+  fi
+
   tmp=$(mktemp)
   header="CTRL-s: Stage all, CTRL-u: Unstage all, >: Select action"
   preview='
@@ -171,6 +176,11 @@ _fzf_git_status() {
 # logs
 # logと差分のプレビューだけ。actionは特になし。
 _fzf_git_logs() {
+  # git projectでなければ終了する
+  if ! git status >/dev/null; then
+    return 1
+  fi
+
   git log \
     --oneline \
     --graph \
