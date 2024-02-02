@@ -83,7 +83,6 @@ _fzf_git_branches() {
 }
 
 # status
-# TODO: promptに未pullと未pushのcommit数を表示する
 _fzf_git_status() {
   tmp=$(mktemp)
   header="CTRL-s: Stage all, CTRL-u: Unstage all, >: Select action"
@@ -99,6 +98,9 @@ _fzf_git_status() {
     fi
   '
 
+  unpulled_commits=$(__get_unpulled_commits)
+  unpushed_commits=$(__get_unpushed_commits)
+
   selected=$(
     (
       echo -e "\e[35;1mDelete latest commit"
@@ -112,7 +114,7 @@ _fzf_git_status() {
         --border-label 'Git Status' \
         --height=80% \
         --header $header \
-        --prompt="TODO: 未pullと未pushのcommit数を表示>" \
+        --prompt="↓${unpulled_commits} ↑${unpushed_commits} >" \
         --bind="tab:toggle+down" \
         --bind=">:execute(echo 'select-action' > $tmp)+accept" \
         --bind="ctrl-s:execute(git add . && echo 'stage-all' > $tmp)+accept" \
@@ -428,6 +430,16 @@ __confirm() {
   else
     return 1
   fi
+}
+
+# 未pushのcommit数を取得
+__get_unpushed_commits() {
+  git rev-list --count origin/$(git rev-parse --abbrev-ref HEAD)..HEAD 2>/dev/null || echo 0
+}
+
+# 未pullのcommit数を取得
+__get_unpulled_commits() {
+  git rev-list --count HEAD..origin/$(git rev-parse --abbrev-ref HEAD) 2>/dev/null || echo 0
 }
 # ------------------------------------------------------------------------------
 # alias定義

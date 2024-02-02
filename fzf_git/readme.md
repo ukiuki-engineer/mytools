@@ -55,5 +55,4 @@ source (path to this script)
 - [ ] 各関数に引数の説明を書いておく
 - [ ] `Create a new branch`などのactionのプレビューを表示しようとしてバグっているので修正する
 - gitStatus
-  - [ ] promptに未pullと未pushのcommit数を表示する
   - [ ] 同じファイルでstaged/unstagedが混ざっている場合は、1行じゃなくて分けた方が良いかも
