@@ -33,10 +33,10 @@ _fzf_git_branches() {
   '
 
   # 選択
-  selected_all=$(
+  selected_branch=$(
     (
       echo -e "\e[35;1mCreate a new branch"
-      git branch -a \
+      git branch \
         --sort=-committerdate \
         --sort=-HEAD \
         --color=always \
@@ -56,29 +56,29 @@ _fzf_git_branches() {
   )
 
   # 選択されてなければ中断
-  if [[ -z $selected_all ]]; then
+  if [[ -z $selected_branch ]]; then
     rm $tmp
     return 1
   fi
 
-  selected=$(echo $selected_all | awk '{print $1}')
+  selected_branch_name=$(echo $selected_branch | awk '{print $1}')
 
   # select action
   if [[ $(cat $tmp) =~ 'select-action' ]]; then
     rm $tmp
-    __branch_actions $selected
+    __branch_actions $selected_branch_name
     return
   fi
 
   rm $tmp
 
-  if [[ $selected_all =~ "Create a new branch" ]]; then
+  if [[ $selected_branch =~ "Create a new branch" ]]; then
     # create a new branch
     __create_new_branch
     return
   else
     # checkout
-    __checkout $selected
+    __checkout $selected_branch_name
   fi
 }
 
