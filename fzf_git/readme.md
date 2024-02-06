@@ -42,7 +42,9 @@ source (path to this script)
 ## Usage
 以下のコマンドが使用可能。
 - `gitBranches`
-- `gitRemoteBranches`
+→オプション: `git branch`のオプションの内、以下が使用可能
+    - `-a`: すべてのブランチを表示
+    - `-r`: リモートブランチのみ表示
 - `gitStatus`
 - `gitLogs`
 

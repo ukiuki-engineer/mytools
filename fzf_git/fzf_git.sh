@@ -3,7 +3,9 @@
 # このファイルを`source`で読み込むと、以下のコマンドが使用可能になる
 #
 # - gitBranches
-# - gitRemoteBranches
+# →オブション
+#   - `-a`: すべてのブランチを表示
+#   - `-r`: リモートブランチのみ表示
 # - gitStatus
 # - gitLogs
 #
@@ -21,27 +23,38 @@ _fzf_git_branches() {
     return 1
   fi
 
+  git_branch_arg=""
+
+  if [[ $1 == "-a" ]]; then
+    git_branch_arg="-a"
+  elif [[ $1 == "-r" ]]; then
+    git_branch_arg="-r"
+  fi
+
   tmp=$(mktemp)
   header="Enter: checkout, >: Select action"
   preview='
+    branch={1}
+    branch="${branch/remotes\//}"; \
     git log  \
     --oneline \
     --graph \
     --date=format:"%Y/%m/%d %H:%M:%S" \
     --color=always \
     --pretty="%C(auto)%h %C(blue)%ad %C(green)[%an]%C(reset) %s" \
-    {1}
+    $branch
   '
 
   # 選択
   selected_branch=$(
     (
       echo -e "\e[35;1mCreate a new branch"
-      git branch \
+      git branch $git_branch_arg \
         --sort=-committerdate \
         --sort=-HEAD \
         --color=always \
-        --format=$'%(HEAD) %(color:yellow)%(refname:short)\t%(color:green)%(committerdate:short)\t%(color:blue)%(subject)%(color:reset)'
+        --format=$'%(HEAD) %(color:yellow)%(refname:short)\t%(color:green)%(committerdate:short)\t%(color:blue)%(subject)%(color:reset)' \
+        | sed -e 's/origin\//remotes\/origin\//'
     ) \
       | column -ts$'\t' \
       | fzf \
@@ -62,7 +75,7 @@ _fzf_git_branches() {
     return 1
   fi
 
-  selected_branch_name=$(echo $selected_branch | awk '{print $1}')
+  selected_branch_name=$(echo $selected_branch | awk '{print $1}' | sed -e 's/^remotes\///')
 
   # select action
   if [[ $(cat $tmp) =~ 'select-action' ]]; then
@@ -81,58 +94,6 @@ _fzf_git_branches() {
     # checkout
     __checkout $selected_branch_name
   fi
-}
-
-# remote branches
-_fzf_git_remote_branches() {
-  # git projectでなければ終了する
-  if ! git status >/dev/null; then
-    return 1
-  fi
-
-  header="Enter: checkout"
-  preview='
-    branch={1}
-    branch="${branch/remotes\//}"; \
-    git log  \
-    --oneline \
-    --graph \
-    --date=format:"%Y/%m/%d %H:%M:%S" \
-    --color=always \
-    --pretty="%C(auto)%h %C(blue)%ad %C(green)[%an]%C(reset) %s" \
-    $branch
-  '
-
-  selected_branch=$(
-    (
-      git branch -r \
-        --sort=-committerdate \
-        --sort=-HEAD \
-        --color=always \
-        --format=$'%(HEAD) %(color:yellow)%(refname:short)\t%(color:green)%(committerdate:short)\t%(color:blue)%(subject)%(color:reset)' \
-        | sed -e 's/origin\//remotes\/origin\//'
-    ) \
-      | column -ts$'\t' \
-      | fzf \
-        --ansi \
-        --border \
-        --border-label ' Branches' \
-        --height=80% \
-        --header $header \
-        --preview $preview \
-        --preview-window='right,50%' \
-      | sed -e 's/\*//'
-  )
-
-  # 選択されてなければ中断
-  if [[ -z $selected_branch ]]; then
-    return 1
-  fi
-
-  selected_branch_name=$(echo $selected_branch | awk '{print $1}')
-
-  # checkout
-  git checkout -t $selected_branch_name
 }
 
 # status
@@ -251,6 +212,8 @@ _fzf_git_logs() {
 # 内部的呼ばれる関数
 
 # branchに対するaction
+# Parameters:
+#   - $1: ブランチ名
 __branch_actions() {
   # 引数無しだとエラー
   if [[ $# -eq 0 ]]; then
@@ -261,16 +224,20 @@ __branch_actions() {
   header="Enter: select action, <: back"
   tmp=$(mktemp)
 
-  # 選択肢
-  actions="
-    checkout,
-    delete,
-    merge,
-    rebase,
-    diff,
-    echo,
-  "
-  actions=$(echo $actions | sed -e 's/,/\n/g' -e 's/ //g' | grep -vE '^$')
+  if [[ $branch =~ "^origin/" ]]; then
+    actions="checkout"
+  else
+    # 選択肢
+    actions="
+      checkout,
+      delete,
+      merge,
+      rebase,
+      diff,
+      echo,
+    "
+    actions=$(echo $actions | sed -e 's/,/\n/g' -e 's/ //g' | grep -vE '^$')
+  fi
 
   # 選択
   action=$(
@@ -449,7 +416,7 @@ __status_actions() {
 # checkoutする
 __checkout() {
   branch=$1
-  if [[ $branch =~ 'origin' ]]; then
+  if [[ $branch =~ '^origin/' ]]; then
     # origin
     git checkout -t $branch
   else
@@ -508,6 +475,5 @@ __get_unpulled_commits() {
 # alias定義
 
 alias gitBranches='_fzf_git_branches'
-alias gitRemoteBranches='_fzf_git_remote_branches'
 alias gitStatus='_fzf_git_status'
 alias gitLogs='_fzf_git_logs'
