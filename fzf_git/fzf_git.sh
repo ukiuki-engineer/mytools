@@ -3,6 +3,7 @@
 # このファイルを`source`で読み込むと、以下のコマンドが使用可能になる
 #
 # - gitBranches
+# - gitRemoteBranches
 # - gitStatus
 # - gitLogs
 #
@@ -80,6 +81,58 @@ _fzf_git_branches() {
     # checkout
     __checkout $selected_branch_name
   fi
+}
+
+# remote branches
+_fzf_git_remote_branches() {
+  # git projectでなければ終了する
+  if ! git status >/dev/null; then
+    return 1
+  fi
+
+  header="Enter: checkout"
+  preview='
+    branch={1}
+    branch="${branch/remotes\//}"; \
+    git log  \
+    --oneline \
+    --graph \
+    --date=format:"%Y/%m/%d %H:%M:%S" \
+    --color=always \
+    --pretty="%C(auto)%h %C(blue)%ad %C(green)[%an]%C(reset) %s" \
+    $branch
+  '
+
+  selected_branch=$(
+    (
+      git branch -r \
+        --sort=-committerdate \
+        --sort=-HEAD \
+        --color=always \
+        --format=$'%(HEAD) %(color:yellow)%(refname:short)\t%(color:green)%(committerdate:short)\t%(color:blue)%(subject)%(color:reset)' \
+        | sed -e 's/origin\//remotes\/origin\//'
+    ) \
+      | column -ts$'\t' \
+      | fzf \
+        --ansi \
+        --border \
+        --border-label ' Branches' \
+        --height=80% \
+        --header $header \
+        --preview $preview \
+        --preview-window='right,50%' \
+      | sed -e 's/\*//'
+  )
+
+  # 選択されてなければ中断
+  if [[ -z $selected_branch ]]; then
+    return 1
+  fi
+
+  selected_branch_name=$(echo $selected_branch | awk '{print $1}')
+
+  # checkout
+  git checkout -t $selected_branch_name
 }
 
 # status
@@ -455,5 +508,6 @@ __get_unpulled_commits() {
 # alias定義
 
 alias gitBranches='_fzf_git_branches'
+alias gitRemoteBranches='_fzf_git_remote_branches'
 alias gitStatus='_fzf_git_status'
 alias gitLogs='_fzf_git_logs'
