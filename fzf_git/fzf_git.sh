@@ -173,11 +173,10 @@ _fzf_git_status() {
   elif [[ $selected == "Discard all changes" ]]; then
     # 全ての変更を破棄
     if __confirm "全ての変更を破棄しますか？"; then
-      # 変更ごとに処理
-      git status --porcelain --find-renames | while read -r line; do
-        # 変更を削除
-        __discard_change $line
-      done
+      # ステージングされた変更とワーキングディレクトリの変更を破棄
+      git reset --hard
+      # 未追跡のファイルとディレクトリを削除
+      git clean -fd
     fi
     # 開き直し
     _fzf_git_status
@@ -400,13 +399,14 @@ __status_actions() {
     done
   elif [[ $action == "stash" ]]; then
     # stash
-    echo "TODO: stash"
     # TODO: stash操作の参考→https://qiita.com/chihiro/items/f373873d5c2dfbd03250
+    echo "TODO: stash"
   elif [[ $action == "discard" ]]; then
-    # TODO: できれば変更を破棄する前にconfirmを入れたい。ここだけじゃなく他のactionも...
-    echo $changes | while read -r change; do
-      __discard_change $change
-    done
+    if __confirm "選択した変更を全て破棄しますか？"; then
+      echo $changes | while read -r change; do
+        __discard_change $change
+      done
+    fi
   fi
 
   # 開き直し
