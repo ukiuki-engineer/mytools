@@ -441,7 +441,7 @@ __discard_change() {
 
   if [[ $change_kind == "??" ]]; then
     # untrackedなfileは削除
-    rm $change_file
+    git clean -fd $change_file
   else
     # その他はrestore
     git restore $change_file
