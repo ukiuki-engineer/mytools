@@ -271,7 +271,15 @@ __branch_actions() {
     __checkout $branch
   elif [[ $action == "delete" ]]; then
     # delete
-    git branch -d $branch
+    if git branch --merged | grep -qE "^ *${branch}$"; then
+      if __confirm "ブランチ '$branch' を削除しますか？"; then
+        git branch -d "$branch"
+      fi
+    else
+      if __confirm "ブランチ '$branch' は完全にマージされていません。削除してもよろしいですか？"; then
+        git branch -D "$branch"
+      fi
+    fi
     _fzf_git_branches
   elif [[ $action == "merge" ]]; then
     # merge
