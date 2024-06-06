@@ -3,7 +3,7 @@
 main() {
   # 引数からgrepの操作内容を取り出す
   operation=""
-  for arg in ${@}; do
+  for arg in "${@}"; do
     if [ $(echo ${arg} | grep -vE '\.xlsx$|\.xls$') ]; then
       # FIXME シングルクォーテーションが消えてしまう
       operation=${operation}" "${arg}
@@ -11,20 +11,18 @@ main() {
   done
 
   # 一つ一つのxlsxファイルに対してgrepする
-  for arg in ${@}; do
+  for arg in "${@}"; do
     # *.xlsx以外の引数の場合何もしない
-    if [ $(echo ${arg} | grep -vE '\.xlsx$|\.xls$') ]; then
+    if [ $(echo "${arg}" | grep -vE '\.xlsx$|\.xls$') ]; then
       continue
     fi
 
     # 一時ファイルなら何もしない
-    if echo ${arg} | grep -qE '^~\$'; then
+    if echo "${arg}" | grep -qE '^~\$'; then
       continue
     fi
 
-    # FIXME: ファイル名に半角スペースが入っているとエラーになる
-
-    target_file=${arg}
+    target_file="${arg}"
 
     # zip展開用一時ディレクトリ作成
     tmpdir=$(mktemp -d)
@@ -33,7 +31,7 @@ main() {
 
     # エクセルファイルを一時ディレクトリに解凍する
     # 標準出力とエラー出力は鬱陶しいので捨てる
-    unzip ${target_file} -d ${tmpdir} 1>/dev/null 2>&1
+    unzip "${target_file}" -d "${tmpdir}" 1>/dev/null 2>&1
 
     # 全xmlファイルにgrepする
     find ${tmpdir} -type f \
@@ -49,7 +47,7 @@ main() {
       # FIXME
       # awkを使って出力しているので、
       # grepの--color=autoが効かない
-      cat ${tmpgrep} | awk '{print filename": "$0}' filename=${target_file}
+      cat ${tmpgrep} | awk '{print filename": "$0}' filename="${target_file}"
     fi
 
     # 一時ディレクトリとファイルを削除
@@ -59,4 +57,4 @@ main() {
   done
 }
 
-main ${@}
+main "${@}"
