@@ -1,5 +1,5 @@
 # fzf_git
-fzfによるgit操作ツール。
+fzfによるgit操作ツール(自分用)
 
 ## Demo
 - `gitBranches`
@@ -53,9 +53,5 @@ source (path to this script)
 - [fzf-preview.vim](https://github.com/yuki-yano/fzf-preview.vim)
 
 ## TODO
-- [ ] 変更を破棄する場合など、誤操作するとマズイ箇所には、操作前にconfirmを入れるようにする
-→`__confirm`という関数を作ったのでそれ使ってif噛ませるだけ
-- [ ] 各関数に引数の説明を書いておく
+- [ ] 各関数に引数のコメントを書いておく
 - [ ] `Create a new branch`などのactionのプレビューを表示しようとしてバグっているので修正する
-- gitStatus
-  - [ ] 同じファイルでstaged/unstagedが混ざっている場合は、1行じゃなくて分けた方が良いかも
