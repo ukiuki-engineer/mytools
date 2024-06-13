@@ -53,5 +53,5 @@ source (path to this script)
 - [fzf-preview.vim](https://github.com/yuki-yano/fzf-preview.vim)
 
 ## TODO
+
 - [ ] 各関数に引数のコメントを書いておく
-- [ ] `Create a new branch`などのactionのプレビューを表示しようとしてバグっているので修正する

@@ -35,6 +35,9 @@ _fzf_git_branches() {
   header="Enter: checkout, >: Select action"
   preview='
     branch={1}
+    if [[ ${branch} = "Create" ]]; then
+      return
+    fi
     branch="${branch/remotes\//}"; \
     git log  \
     --oneline \
@@ -106,6 +109,9 @@ _fzf_git_status() {
   tmp=$(mktemp)
   header="CTRL-s: Stage all, CTRL-u: Unstage all, >: Select action"
   preview='
+    if [[ {} = "Delete latest commit" ]] || [[ {} = "Discard all changes" ]]; then
+      return
+    fi
     if echo {} | grep -E "^ M|^ D" >/dev/null; then
       git -c color.diff=always diff -- {2}
     elif echo {} | grep -E "^M|^D" >/dev/null; then
