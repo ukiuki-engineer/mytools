@@ -86,6 +86,62 @@ function! StrToArrayElement(symbol) abort
   execute l:command_insert_tail
 endfunction
 
+function! AddSpaceToCol73() abort
+  " バッファ内の各行ごとに処理
+  for lnum in range(1, line('$'))
+    " 現在行
+    let current_line = getline(lnum)
+    " 現在行の長さ
+    let line_length = strlen(current_line)
+
+    " 行の長さが73未満の場合、73桁目まで空白を追加
+    if line_length < 73
+      " 73桁目までの空白を追加
+      let spaces_to_add = repeat(' ', 73 - line_length)
+      let new_line = current_line . spaces_to_add
+      
+      " 行を更新
+      call setline(lnum, new_line)
+    endif
+  endfor
+endfunction
+
+function! InsertLineNum(start_num) abort
+  " 開始行のデフォルト値
+  let l:start_num = 1
+  if a:start_num != ""
+    " 引数が指定されたらそれを使う
+    let l:start_num = a:start_num
+  endif
+
+  " 行番号の増分
+  let l:increment = 10
+
+  " バッファのすべての行を処理
+  for lnum in range(1, line('$'))
+    " 現在の行の内容を取得
+    let current_line = getline(lnum)
+    
+    " 行番号を6桁にフォーマットし、行の前に追加
+    let formatted_number = printf('%06d', l:start_num)
+    let new_line = formatted_number . ' ' . current_line
+
+    " 行を更新
+    call setline(lnum, new_line)
+
+    " 次の行番号にインクリメント
+    let l:start_num += l:increment
+  endfor
+endfunction
+
+"
 " コマンド定義
-command! -nargs=* SqlToJavaCode :call SqlToJavaCode("<args>")
-command! -nargs=* StrToArrayElement :call StrToArrayElement("<args>")
+"
+" sql文をjavaコードに変換
+command! -nargs=* SqlToJavaCode       :call SqlToJavaCode("<args>")
+" 文字列を配列の記述に変換
+command! -nargs=* StrToArrayElement   :call StrToArrayElement("<args>")
+" 73桁目まで空白埋め
+command!          AddSpaceToCol73     :call AddSpaceToCol73()
+" 初め6桁で行番号
+command! -nargs=* InsertLineNum       :call InsertLineNum("<args>")
