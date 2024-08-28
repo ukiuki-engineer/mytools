@@ -150,6 +150,27 @@ cnoremap <C-d> <Del>
 " `%`での対記号ジャンプを強化(htmlの開始タグ-終了タグ間でジャンプできるようになったりとか)
 packadd! matchit
 " ------------------------------------------------------------------------------
+"  Custom for 823
+" ------------------------------------------------------------------------------
+function! SqlToJavaCode(value_name) abort
+  " 変数名のデフォルト値
+  let l:value_name = "stSql"
+  if a:value_name != ""
+    " 引数が指定されたらそれを使う
+    let l:value_name = a:value_name
+  endif
+
+  let l:insert_str_head = l:value_name .. " = " .. l:value_name .. " + \""
+  let l:insert_str_tail = "\";"
+  let l:command_insert_head = "%norm! I" .. l:insert_str_head
+  let l:command_insert_tail = "%norm! A" .. l:insert_str_tail
+
+  execute l:command_insert_head
+  execute l:command_insert_tail
+endfunction
+
+command! -nargs=* SqlToJavaCode :call SqlToJavaCode("<args>")
+" ------------------------------------------------------------------------------
 "  その他
 " ------------------------------------------------------------------------------
 " ファイル形式別プラグインの有効化
