@@ -165,11 +165,34 @@ function! SqlToJavaCode(value_name) abort
   let l:command_insert_head = "%norm! I" .. l:insert_str_head
   let l:command_insert_tail = "%norm! A" .. l:insert_str_tail
 
+  " 行頭に挿入
   execute l:command_insert_head
+  " 行末に挿入
   execute l:command_insert_tail
 endfunction
 
+function! StrToArrayElement(symbol) abort
+  " 囲む記号のデフォルト
+  let l:symbol = "\""
+  if a:symbol != ""
+    " 引数が指定されたらそれを使う
+    let l:symbol = a:symbol
+  endif
+
+  let l:insert_str_head = l:symbol
+  let l:insert_str_tail = l:symbol .. ","
+  let l:command_insert_head = "%norm! I" .. l:insert_str_head
+  let l:command_insert_tail = "%norm! A" .. l:insert_str_tail
+
+  " 行頭に挿入
+  execute l:command_insert_head
+  " 行末に挿入
+  execute l:command_insert_tail
+endfunction
+
+" コマンド定義
 command! -nargs=* SqlToJavaCode :call SqlToJavaCode("<args>")
+command! -nargs=* StrToArrayElement :call StrToArrayElement("<args>")
 " ------------------------------------------------------------------------------
 "  その他
 " ------------------------------------------------------------------------------
