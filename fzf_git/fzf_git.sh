@@ -213,6 +213,11 @@ _fzf_git_logs() {
       --preview-window='right,50%'
 
 }
+
+# stash list
+_fzf_stash_list() {
+  echo TODO: 未実装
+}
 # ------------------------------------------------------------------------------
 # 内部的呼ばれる関数
 # ------------------------------------------------------------------------------
@@ -374,9 +379,20 @@ __status_actions() {
       fi
     done
   elif [[ $action == "stash" ]]; then
-    # stash
-    # TODO: stash操作の参考→https://qiita.com/chihiro/items/f373873d5c2dfbd03250
-    echo "TODO: stash"
+    # stash messageを標準入力から受け取る
+    echo -n "Enter Stash message: "
+    read stash_message
+
+    selected_file_names=""
+    echo $changes | while read -r change; do
+      selected_file_name=$(echo $change | awk '{print $2}')
+      selected_file_names=$selected_file_names" $selected_file_name"
+      # 選択されたファイルをstageする
+      git add $selected_file_name
+    done
+
+    # stageされたファイルをstashする
+    eval git stash push -m "${stash_message}" --${selected_file_names}
   elif [[ $action == "discard" ]]; then
     if __confirm "選択した変更を全て破棄しますか？"; then
       echo $changes | while read -r change; do
