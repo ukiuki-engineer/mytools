@@ -38,6 +38,13 @@ set clipboard+=unnamed
 set backspace=indent,eol,start
 " <Esc>を押された後次のキー入力を待つ時間
 set ttimeoutlen=10
+
+" kaoriya版用の設定
+if has('kaoriya')
+  " windows likeなキーマップ設定の読み込み
+  " -> ctrl+c, ctrl+vとかが使えるようになるやつ
+  source $VIMRUNTIME/mswin.vim
+endif
 " ------------------------------------------------------------------------------
 "  Custom for 823
 " ------------------------------------------------------------------------------
