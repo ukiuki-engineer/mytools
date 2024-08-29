@@ -31,6 +31,7 @@ _fzf_git_branches() {
     git_branch_arg="-r"
   fi
 
+  # select actionを選択したら'select-action'という文字列を一時ファイルにリダイレクトしておく
   tmp=$(mktemp)
   header="Enter: checkout, >: Select action"
   preview='
@@ -106,6 +107,7 @@ _fzf_git_status() {
     return 1
   fi
 
+  # select actionを選択したら'select-action'という文字列を一時ファイルにリダイレクトしておく
   tmp=$(mktemp)
   header="CTRL-s: Stage all, CTRL-u: Unstage all, >: Select action"
   preview='
@@ -232,6 +234,7 @@ __branch_actions() {
 
   branch=$1
   header="Enter: select action, <: back"
+  # backを選択したら'back'という文字列を一時ファイルにリダイレクトしておく
   tmp=$(mktemp)
 
   if [[ $branch =~ "^origin/" ]]; then
@@ -317,6 +320,7 @@ __status_actions() {
   changes=$*
   header="Enter: select action, <: back"
   header_lines="selected changes: "$(echo $changes | awk '{print $2", "}' | tr -d '\n' | sed -e 's/, $//')
+  # backを選択したら'back'という文字列を一時ファイルにリダイレクトしておく
   tmp=$(mktemp)
 
   actions="
@@ -472,6 +476,7 @@ main() {
   alias gitBranches='_fzf_git_branches'
   alias gitStatus='_fzf_git_status'
   alias gitLogs='_fzf_git_logs'
+  alias gitStashList='_fzf_git_stash_list'
 }
 # ------------------------------------------------------------------------------
 
