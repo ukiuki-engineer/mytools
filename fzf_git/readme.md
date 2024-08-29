@@ -47,6 +47,7 @@ source (path to this script)
     - `-r`: リモートブランチのみ表示
 - `gitStatus`
 - `gitLogs`
+- `gitStashList`
 
 ## Inspired By
 - [fzf-git.sh](https://github.com/junegunn/fzf-git.sh)

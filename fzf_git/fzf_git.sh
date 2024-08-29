@@ -217,8 +217,44 @@ _fzf_git_logs() {
 }
 
 # stash list
-_fzf_stash_list() {
-  echo TODO: 未実装
+_fzf_git_stash_list() {
+  # git projectでなければ終了する
+  if ! git status >/dev/null; then
+    return 1
+  fi
+
+  # select actionを選択したら'select-action'という文字列を一時ファイルにリダイレクトしておく
+  tmp=$(mktemp)
+
+  selected_stash=$(
+    git stash list \
+      --pretty=format:"%C(cyan)%gd %C(magenta)%h %C(yellow)%cd %Cblue[%cn] %Creset%s" \
+      --color=always \
+      | fzf \
+        --ansi \
+        --header ">: Select action" \
+        --border \
+        --preview 'git diff {1} --color=always' \
+        --preview-window='right,50%' \
+        --bind=">:execute(echo 'select-action' > $tmp)+accept"
+  )
+
+  # 選択されてなければ中断
+  if [[ -z $selected_stash ]]; then
+    rm $tmp
+    return 1
+  fi
+
+  selected_stash_name=$(echo $selected_stash | awk '{print $1}')
+
+  # select action
+  if [[ $(cat $tmp) =~ 'select-action' ]]; then
+    rm $tmp
+    __stash_actions $selected_stash_name
+    return
+  fi
+
+  rm $tmp
 }
 # ------------------------------------------------------------------------------
 # 内部的呼ばれる関数
@@ -407,6 +443,67 @@ __status_actions() {
 
   # 開き直し
   _fzf_git_status
+}
+
+__stash_actions() {
+  # 引数無しだとエラー
+  if [[ $# -eq 0 ]]; then
+    return 1
+  fi
+
+  stash=$1
+  echo $1
+  header="Enter: select action, <: back"
+  header_lines="selected stash: $stash"
+  # backを選択したら'back'という文字列を一時ファイルにリダイレクトしておく
+  tmp=$(mktemp)
+
+  actions="
+    apply,
+    drop,
+  "
+  actions=$(echo $actions | sed -e 's/,/\n/g' -e 's/ //g' | grep -vE '^$')
+
+  # 選択
+  action=$(
+    (
+      echo $header_lines
+      echo $actions
+    ) \
+      | fzf \
+        --border \
+        --border-label 'Stash Actions' \
+        --header $header \
+        --header-lines 1 \
+        --height=20% \
+        --bind="<:execute(echo 'back' > $tmp)+accept"
+  )
+
+  # 選択されてなければ中断
+  if [[ -z $action ]]; then
+    rm $tmp
+    return 1
+  fi
+
+  # back
+  if [[ $(cat $tmp) =~ 'back' ]]; then
+    rm $tmp
+    _fzf_git_stash_list
+    return
+  fi
+
+  rm $tmp
+  # ここからactionの処理
+  if [[ $action == "apply" ]]; then
+    # apply
+    git stash apply $stash
+  elif [[ $action == "drop" ]]; then
+    # drop
+    git stash drop $stash
+  fi
+
+  # 開き直し
+  _fzf_git_stash_list
 }
 
 # checkoutする
