@@ -106,9 +106,9 @@ function! AddSpaceToCol73() abort
   endfor
 endfunction
 
-function! InsertLineNum(start_num) abort
+function! UpdateLineNum(start_num) abort
   " 開始行のデフォルト値
-  let start_num = 1
+  let start_num = 10
   if a:start_num != ""
     " 引数が指定されたらそれを使う
     let start_num = a:start_num
@@ -124,7 +124,11 @@ function! InsertLineNum(start_num) abort
     
     " 行番号を6桁にフォーマットし、行の前に追加
     let formatted_number = printf('%06d', start_num)
-    let new_line = formatted_number . ' ' . current_line
+    if getline(lnum)[6] != '*'
+      let new_line = formatted_number .. ' ' .. strpart(current_line, 7)
+    else
+      let new_line = formatted_number .. strpart(current_line, 6)
+    endif
 
     " 行を更新
     call setline(lnum, new_line)
@@ -144,4 +148,4 @@ command! -nargs=* StrToArrayElement   :call StrToArrayElement("<args>")
 " 73桁目まで空白埋め
 command!          AddSpaceToCol73     :call AddSpaceToCol73()
 " 初め6桁で行番号
-command! -nargs=* InsertLineNum       :call InsertLineNum("<args>")
+command! -nargs=* UpdateLineNum       :call UpdateLineNum("<args>")
