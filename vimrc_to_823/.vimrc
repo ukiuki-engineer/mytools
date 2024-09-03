@@ -50,40 +50,40 @@ endif
 " ------------------------------------------------------------------------------
 function! SqlToJavaCode(value_name) abort
   " 変数名のデフォルト値
-  let l:value_name = "stSql"
+  let value_name = "stSql"
   if a:value_name != ""
     " 引数が指定されたらそれを使う
-    let l:value_name = a:value_name
+    let value_name = a:value_name
   endif
 
-  let l:insert_str_head = l:value_name .. " = " .. l:value_name .. " + \""
-  let l:insert_str_tail = "\";"
-  let l:command_insert_head = "%norm! I" .. l:insert_str_head
-  let l:command_insert_tail = "%norm! A" .. l:insert_str_tail
+  let insert_str_head = value_name .. " = " .. value_name .. " + \""
+  let insert_str_tail = "\";"
+  let command_insert_head = "%norm! I" .. insert_str_head
+  let command_insert_tail = "%norm! A" .. insert_str_tail
 
   " 行頭に挿入
-  execute l:command_insert_head
+  execute command_insert_head
   " 行末に挿入
-  execute l:command_insert_tail
+  execute command_insert_tail
 endfunction
 
 function! StrToArrayElement(symbol) abort
   " 囲む記号のデフォルト
-  let l:symbol = "\""
+  let symbol = "\""
   if a:symbol != ""
     " 引数が指定されたらそれを使う
-    let l:symbol = a:symbol
+    let symbol = a:symbol
   endif
 
-  let l:insert_str_head = l:symbol
-  let l:insert_str_tail = l:symbol .. ","
-  let l:command_insert_head = "%norm! I" .. l:insert_str_head
-  let l:command_insert_tail = "%norm! A" .. l:insert_str_tail
+  let insert_str_head = symbol
+  let insert_str_tail = symbol .. ","
+  let command_insert_head = "%norm! I" .. insert_str_head
+  let command_insert_tail = "%norm! A" .. insert_str_tail
 
   " 行頭に挿入
-  execute l:command_insert_head
+  execute command_insert_head
   " 行末に挿入
-  execute l:command_insert_tail
+  execute command_insert_tail
 endfunction
 
 function! AddSpaceToCol73() abort
@@ -108,14 +108,14 @@ endfunction
 
 function! InsertLineNum(start_num) abort
   " 開始行のデフォルト値
-  let l:start_num = 1
+  let start_num = 1
   if a:start_num != ""
     " 引数が指定されたらそれを使う
-    let l:start_num = a:start_num
+    let start_num = a:start_num
   endif
 
   " 行番号の増分
-  let l:increment = 10
+  let increment = 10
 
   " バッファのすべての行を処理
   for lnum in range(1, line('$'))
@@ -123,14 +123,14 @@ function! InsertLineNum(start_num) abort
     let current_line = getline(lnum)
     
     " 行番号を6桁にフォーマットし、行の前に追加
-    let formatted_number = printf('%06d', l:start_num)
+    let formatted_number = printf('%06d', start_num)
     let new_line = formatted_number . ' ' . current_line
 
     " 行を更新
     call setline(lnum, new_line)
 
     " 次の行番号にインクリメント
-    let l:start_num += l:increment
+    let start_num += increment
   endfor
 endfunction
 
