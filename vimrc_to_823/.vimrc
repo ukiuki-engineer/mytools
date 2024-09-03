@@ -124,11 +124,7 @@ function! UpdateLineNum(start_num) abort
     
     " 行番号を6桁にフォーマットし、行の前に追加
     let formatted_number = printf('%06d', start_num)
-    if getline(lnum)[6] != '*'
-      let new_line = formatted_number .. ' ' .. strpart(current_line, 7)
-    else
-      let new_line = formatted_number .. strpart(current_line, 6)
-    endif
+    let new_line = formatted_number .. strpart(current_line, 6)
 
     " 行を更新
     call setline(lnum, new_line)
