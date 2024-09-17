@@ -69,7 +69,7 @@ endfunction
 
 function! StrToArrayElement(symbol) abort
   " 囲む記号のデフォルト
-  let symbol = "\""
+  let symbol = "\'"
   if a:symbol != ""
     " 引数が指定されたらそれを使う
     let symbol = a:symbol
@@ -95,9 +95,9 @@ function! AddSpaceToCol73() abort
     let line_length = strlen(current_line)
 
     " 行の長さが73未満の場合、73桁目まで空白を追加
-    if line_length < 73
+    if line_length < 72
       " 73桁目までの空白を追加
-      let spaces_to_add = repeat(' ', 73 - line_length)
+      let spaces_to_add = repeat(' ', 72 - line_length)
       let new_line = current_line . spaces_to_add
       
       " 行を更新
