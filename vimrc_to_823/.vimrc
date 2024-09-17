@@ -94,15 +94,20 @@ function! AddSpaceToCol73() abort
     " 現在行の長さ
     let line_length = strlen(current_line)
 
-    " 行の長さが73未満の場合、73桁目まで空白を追加
     if line_length < 72
-      " 73桁目までの空白を追加
+      " 行の長さが72未満の場合、72桁目まで空白を追加
       let spaces_to_add = repeat(' ', 72 - line_length)
       let new_line = current_line . spaces_to_add
-      
-      " 行を更新
-      call setline(lnum, new_line)
+    else
+      " 73桁目以降の文字列がある場合、73桁目以降の部分を残す
+      let new_line = strpart(current_line, 0, 72)
+      let remaining_part = substitute(strpart(current_line, 72), '\s\+$', '', '')
+      let new_line .= remaining_part
     endif
+
+    " 行を更新
+    call setline(lnum, new_line)
+
   endfor
 endfunction
 
