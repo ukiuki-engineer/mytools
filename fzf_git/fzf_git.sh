@@ -500,10 +500,9 @@ __stash_actions() {
   elif [[ $action == "drop" ]]; then
     # drop
     git stash drop $stash
+    # 開き直し
+    _fzf_git_stash_list
   fi
-
-  # 開き直し
-  _fzf_git_stash_list
 }
 
 # checkoutする
