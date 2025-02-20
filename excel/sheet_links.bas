@@ -8,7 +8,7 @@ Sub MakeLinkSheet()
   ' 新しいシートを追加して一覧を作成
   Sheets.Add
   ActiveSheet.Name = SHEET_NAME
-  For Each ws In ThisWorkbook.Sheets
+  For Each ws In ActiveWorkbook.Sheets
     If ws.Name <> SHEET_NAME Then
       ActiveSheet.Cells(i, 1).Value = ws.Name
       ActiveSheet.Hyperlinks.Add Anchor:=ActiveSheet.Cells(i, 1), _
