@@ -7,7 +7,7 @@
 
 ## **1. Excelの個人用マクロブックを開く**
 1. **Excelを開く**
-2. `⌘ + Option + T` を押して **「VBAエディター (VBE)」** を開く
+2. `開発 > Visual Basic` からVisual Basic Editor (VBE) を開く
 3. **「表示」** → **「プロジェクト エクスプローラー」** で `VBAProject (PERSONAL.XLSB)` があることを確認  
    - もし `PERSONAL.XLSB` がない場合、適当なマクロを作成して保存すると自動的に作成される
 4. `VBAProject (PERSONAL.XLSB)` をダブルクリックし、`標準モジュール` を確認する
