@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>多角形描画ツール</title>
+
+    <!-- CDN版ライブラリ: p5.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.4/p5.min.js"></script>
+
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family:
+          system-ui,
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          sans-serif;
+        background: #f4f4f5;
+        color: #18181b;
+        display: flex;
+        min-height: 100vh;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+      }
+
+      .app {
+        width: min(900px, 100%);
+        background: #ffffff;
+        border-radius: 20px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+        overflow: hidden;
+      }
+
+      header {
+        padding: 24px 28px 16px;
+        border-bottom: 1px solid #e4e4e7;
+      }
+
+      h1 {
+        margin: 0 0 8px;
+        font-size: 24px;
+      }
+
+      p {
+        margin: 0;
+        color: #52525b;
+        line-height: 1.6;
+      }
+
+      .controls {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(140px, 1fr));
+        gap: 16px;
+        padding: 20px 28px;
+        border-bottom: 1px solid #e4e4e7;
+      }
+
+      label {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        font-size: 14px;
+        font-weight: 600;
+      }
+
+      input {
+        width: 100%;
+        padding: 10px 12px;
+        border: 1px solid #d4d4d8;
+        border-radius: 10px;
+        font-size: 16px;
+      }
+
+      input:focus {
+        outline: 2px solid #a1a1aa;
+        outline-offset: 2px;
+      }
+
+      .canvas-wrap {
+        padding: 24px;
+        display: flex;
+        justify-content: center;
+        background: #fafafa;
+      }
+
+      #canvas-container {
+        width: 100%;
+        max-width: 720px;
+        aspect-ratio: 1 / 1;
+        border-radius: 16px;
+        overflow: hidden;
+        background: #ffffff;
+        border: 1px solid #e4e4e7;
+      }
+
+      .message {
+        padding: 0 28px 24px;
+        color: #71717a;
+        font-size: 14px;
+      }
+
+      @media (max-width: 720px) {
+        .controls {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+
+      @media (max-width: 480px) {
+        .controls {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="app">
+      <header>
+        <h1>多角形描画ツール</h1>
+        <p>角数を入力すると、その角数の正多角形を描画します。</p>
+      </header>
+
+      <section class="controls">
+        <label>
+          角数
+          <input id="sidesInput" type="number" min="3" max="5000" value="6" />
+        </label>
+
+        <label>
+          サイズ
+          <input id="sizeInput" type="range" min="50" max="320" value="220" />
+        </label>
+
+        <label>
+          回転角度
+          <input id="rotationInput" type="range" min="0" max="360" value="0" />
+        </label>
+
+        <label>
+          線の太さ
+          <input id="strokeInput" type="range" min="1" max="12" value="4" />
+        </label>
+      </section>
+
+      <section class="canvas-wrap">
+        <div id="canvas-container"></div>
+      </section>
+
+      <div class="message" id="message"></div>
+    </main>
+
+    <script>
+      const sidesInput = document.getElementById("sidesInput");
+      const sizeInput = document.getElementById("sizeInput");
+      const rotationInput = document.getElementById("rotationInput");
+      const strokeInput = document.getElementById("strokeInput");
+      const message = document.getElementById("message");
+      const canvasContainer = document.getElementById("canvas-container");
+
+      let canvas;
+
+      function setup() {
+        const size = canvasContainer.clientWidth;
+        canvas = createCanvas(size, size);
+        canvas.parent("canvas-container");
+        angleMode(DEGREES);
+        noLoop();
+
+        [sidesInput, sizeInput, rotationInput, strokeInput].forEach((input) => {
+          input.addEventListener("input", redraw);
+        });
+      }
+
+      function windowResized() {
+        const size = canvasContainer.clientWidth;
+        resizeCanvas(size, size);
+        redraw();
+      }
+
+      function draw() {
+        background(255);
+
+        const sides = Number(sidesInput.value);
+        const radius = Number(sizeInput.value);
+        const rotation = Number(rotationInput.value);
+        const strokeWidth = Number(strokeInput.value);
+
+        if (!Number.isInteger(sides) || sides < 3) {
+          message.textContent = "角数は3以上の整数を入力してください。";
+          return;
+        }
+
+        if (sides > 5000) {
+          message.textContent = "角数が多すぎるため、5000以下にしてください。";
+          return;
+        }
+
+        message.textContent =
+          sides >= 500
+            ? `${sides}角形を描画中。ほぼ円に近く見えます。`
+            : `${sides}角形を描画中`;
+
+        translate(width / 2, height / 2);
+        rotate(rotation - 90);
+
+        stroke(24);
+        strokeWeight(strokeWidth);
+        fill(230);
+
+        beginShape();
+        for (let i = 0; i < sides; i++) {
+          const angle = (360 / sides) * i;
+          const x = cos(angle) * radius;
+          const y = sin(angle) * radius;
+          vertex(x, y);
+        }
+        endShape(CLOSE);
+      }
+    </script>
+  </body>
+</html>
