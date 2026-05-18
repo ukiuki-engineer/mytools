@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>体重管理グラフ</title>
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+  <main class="container">
+    <header class="header">
+      <div>
+        <h1>体重管理グラフ</h1>
+        <p>7日移動平均と目標体重を比較します。</p>
+      </div>
+      <div class="controls">
+        <label>
+          表示開始
+          <input type="date" id="startDate" />
+        </label>
+        <label>
+          表示終了
+          <input type="date" id="endDate" />
+        </label>
+        <label class="checkboxLabel">
+          <input type="checkbox" id="showRaw" />
+          実測値を点で表示
+        </label>
+      </div>
+    </header>
+
+    <section class="summary" id="summary"></section>
+
+    <section class="chartCard">
+      <canvas id="weightChart"></canvas>
+    </section>
+
+    <section class="notes">
+      <h2>見方</h2>
+      <ul>
+        <li>実測値は日々の水分・塩分・便通などで大きく揺れます。</li>
+        <li>基本判定は「7日移動平均」と「目標体重」の差で見ます。</li>
+        <li>測定が長く空いた区間も、移動平均線は直線でつなぎます。</li>
+      </ul>
+    </section>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+  <script src="./data.js"></script>
+  <script src="./app.js"></script>
+</body>
+</html>

@@ -1,0 +1,458 @@
+const CONFIG = {
+  movingAverageDays: 7,
+  minMovingAverageCount: 1,
+  breakLineAfterDaysWithoutMeasurement: 7,
+  yAxisMinPaddingKg: 10,
+  yAxisMinStepKg: 10,
+  yAxisMaxPaddingKg: 10,
+  yAxisMaxStepKg: 10,
+};
+
+let chart = null;
+
+function parseDate(dateString) {
+  const [year, month, day] = dateString.split('-').map(Number);
+  return new Date(year, month - 1, day);
+}
+
+function formatDate(date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+function addDays(date, days) {
+  const next = new Date(date);
+  next.setDate(next.getDate() + days);
+  return next;
+}
+
+function getMonthStart(date) {
+  return new Date(date.getFullYear(), date.getMonth(), 1);
+}
+
+function getMonthEnd(date) {
+  return new Date(date.getFullYear(), date.getMonth() + 1, 0);
+}
+
+function diffDays(a, b) {
+  const ms = parseDate(formatDate(a)).getTime() - parseDate(formatDate(b)).getTime();
+  return Math.round(ms / 86400000);
+}
+
+function sortRecords(records) {
+  return [...records].sort((a, b) => parseDate(a.date) - parseDate(b.date));
+}
+
+function getDateRange(weightRecords, targetRecords) {
+  const dates = [...weightRecords, ...targetRecords].map(row => parseDate(row.date));
+  const min = new Date(Math.min(...dates));
+  const max = new Date(Math.max(...dates));
+  const today = parseDate(formatDate(new Date()));
+  return { min, max: max > today ? max : today };
+}
+
+function buildDailyDates(start, end) {
+  const dates = [];
+  for (let d = new Date(start); d <= end; d = addDays(d, 1)) {
+    dates.push(formatDate(d));
+  }
+  return dates;
+}
+
+function makeWeightMap(records) {
+  const map = new Map();
+  for (const row of records) {
+    if (row.date && typeof row.weight === 'number') {
+      map.set(row.date, row.weight);
+    }
+  }
+  return map;
+}
+
+function makeTargetMap(records) {
+  const map = new Map();
+  for (const row of records) {
+    if (row.date && typeof row.weight === 'number') {
+      map.set(row.date, row.weight);
+    }
+  }
+  return map;
+}
+
+function interpolateTarget(dateString, targets) {
+  if (targets.length === 0) return null;
+
+  const current = parseDate(dateString);
+
+  if (current <= parseDate(targets[0].date)) {
+    return targets[0].weight;
+  }
+
+  for (let i = 0; i < targets.length - 1; i++) {
+    const prev = targets[i];
+    const next = targets[i + 1];
+    const prevDate = parseDate(prev.date);
+    const nextDate = parseDate(next.date);
+
+    if (current >= prevDate && current <= nextDate) {
+      const totalDays = diffDays(nextDate, prevDate);
+      const elapsedDays = diffDays(current, prevDate);
+      const ratio = totalDays === 0 ? 0 : elapsedDays / totalDays;
+      return prev.weight + (next.weight - prev.weight) * ratio;
+    }
+  }
+
+  return targets[targets.length - 1].weight;
+}
+
+function calculateMovingAverage(dateString, weightMap) {
+  const current = parseDate(dateString);
+  const today = parseDate(formatDate(new Date()));
+  if (current > today) return null;
+
+  const values = [];
+  let lastMeasuredDate = null;
+
+  for (let i = CONFIG.movingAverageDays - 1; i >= 0; i--) {
+    const d = addDays(current, -i);
+    const key = formatDate(d);
+    if (weightMap.has(key)) {
+      values.push(weightMap.get(key));
+      lastMeasuredDate = d;
+    }
+  }
+
+  if (values.length < CONFIG.minMovingAverageCount) return null;
+
+  const daysSinceLastMeasurement = diffDays(current, lastMeasuredDate);
+  if (daysSinceLastMeasurement >= CONFIG.breakLineAfterDaysWithoutMeasurement) {
+    return null;
+  }
+
+  const sum = values.reduce((acc, value) => acc + value, 0);
+  return Number((sum / values.length).toFixed(2));
+}
+
+function buildChartRows() {
+  const weightRecords = sortRecords(WEIGHT_RECORDS || []);
+  const targetRecords = sortRecords(TARGET_RECORDS || []);
+  const weightMap = makeWeightMap(weightRecords);
+  const targetMap = makeTargetMap(targetRecords);
+  const range = getDateRange(weightRecords, targetRecords);
+  const dates = buildDailyDates(range.min, range.max);
+
+  return dates.map(date => ({
+    date,
+    weight: weightMap.get(date) ?? null,
+    movingAverage: calculateMovingAverage(date, weightMap),
+    target: targetMap.get(date) ?? null,
+    targetForDiff: interpolateTarget(date, targetRecords),
+  }));
+}
+
+function getDateBounds(rows) {
+  if (rows.length === 0) {
+    return null;
+  }
+  return {
+    min: parseDate(rows[0].date),
+    max: parseDate(rows[rows.length - 1].date),
+  };
+}
+
+function setDefaultDateRangeInputs(rows) {
+  const bounds = getDateBounds(rows);
+  if (!bounds) return;
+
+  const startInput = document.getElementById('startDate');
+  const endInput = document.getElementById('endDate');
+  const minDateString = formatDate(bounds.min);
+  const maxDateString = formatDate(bounds.max);
+
+  startInput.min = minDateString;
+  startInput.max = maxDateString;
+  endInput.min = minDateString;
+  endInput.max = maxDateString;
+
+  const today = parseDate(formatDate(new Date()));
+  let defaultStart = getMonthStart(today);
+  let defaultEnd = getMonthEnd(today);
+
+  if (defaultStart < bounds.min) defaultStart = bounds.min;
+  if (defaultStart > bounds.max) defaultStart = bounds.max;
+  if (defaultEnd < bounds.min) defaultEnd = bounds.min;
+  if (defaultEnd > bounds.max) defaultEnd = bounds.max;
+
+  if (defaultStart > defaultEnd) {
+    defaultStart = defaultEnd;
+  }
+
+  startInput.value = formatDate(defaultStart);
+  endInput.value = formatDate(defaultEnd);
+}
+
+function getSelectedDateRange(rows) {
+  const bounds = getDateBounds(rows);
+  if (!bounds) return null;
+
+  const startInput = document.getElementById('startDate');
+  const endInput = document.getElementById('endDate');
+  const startValue = startInput.value || startInput.min || formatDate(bounds.min);
+  const endValue = endInput.value || endInput.max || formatDate(bounds.max);
+  let startDate = parseDate(startValue);
+  let endDate = parseDate(endValue);
+
+  if (Number.isNaN(startDate.getTime())) startDate = bounds.min;
+  if (Number.isNaN(endDate.getTime())) endDate = bounds.max;
+
+  if (startDate < bounds.min) startDate = bounds.min;
+  if (startDate > bounds.max) startDate = bounds.max;
+  if (endDate < bounds.min) endDate = bounds.min;
+  if (endDate > bounds.max) endDate = bounds.max;
+
+  if (startDate > endDate) {
+    const temp = startDate;
+    startDate = endDate;
+    endDate = temp;
+  }
+
+  startInput.value = formatDate(startDate);
+  endInput.value = formatDate(endDate);
+
+  return { startDate, endDate };
+}
+
+function filterRowsByDateRange(rows, range) {
+  if (rows.length === 0) return rows;
+  if (!range) return rows;
+
+  return rows.filter(row => {
+    const date = parseDate(row.date);
+    return date >= range.startDate && date <= range.endDate;
+  });
+}
+
+function getLatestNonNull(rows, key) {
+  for (let i = rows.length - 1; i >= 0; i--) {
+    if (rows[i][key] !== null && rows[i][key] !== undefined) {
+      return rows[i];
+    }
+  }
+  return null;
+}
+
+function calculateYAxisMin(rows) {
+  const values = [];
+  for (const row of rows) {
+    if (typeof row.weight === 'number') values.push(row.weight);
+    if (typeof row.movingAverage === 'number') values.push(row.movingAverage);
+    if (typeof row.target === 'number') values.push(row.target);
+  }
+
+  if (values.length === 0) return undefined;
+
+  const minValue = Math.min(...values);
+  const paddedMin = minValue - CONFIG.yAxisMinPaddingKg;
+  return Math.floor(paddedMin / CONFIG.yAxisMinStepKg) * CONFIG.yAxisMinStepKg;
+}
+
+function calculateYAxisMax(rows) {
+  const values = [];
+  for (const row of rows) {
+    if (typeof row.weight === 'number') values.push(row.weight);
+    if (typeof row.movingAverage === 'number') values.push(row.movingAverage);
+    if (typeof row.target === 'number') values.push(row.target);
+  }
+
+  if (values.length === 0) return undefined;
+
+  const maxValue = Math.max(...values);
+  const paddedMax = maxValue + CONFIG.yAxisMaxPaddingKg;
+  return Math.ceil(paddedMax / CONFIG.yAxisMaxStepKg) * CONFIG.yAxisMaxStepKg;
+}
+
+function getXAxisLabelStep(totalDays) {
+  if (totalDays <= 14) return 1;
+  if (totalDays <= 45) return 3;
+  if (totalDays <= 120) return 7;
+  if (totalDays <= 240) return 14;
+  return 30;
+}
+
+function renderSummary(rows) {
+  const latestWeight = getLatestNonNull(rows, 'weight');
+  const latestAverage = getLatestNonNull(rows, 'movingAverage');
+  const targetAtAverageDate = latestAverage
+    ? rows.find(row => row.date === latestAverage.date)?.targetForDiff
+    : null;
+
+  const diff = latestAverage && typeof targetAtAverageDate === 'number'
+    ? Number((latestAverage.movingAverage - targetAtAverageDate).toFixed(2))
+    : null;
+
+  const summary = document.getElementById('summary');
+  summary.innerHTML = `
+    ${summaryItem('最新測定値', latestWeight ? `${latestWeight.weight.toFixed(1)} kg` : '-', latestWeight?.date ?? '')}
+    ${summaryItem('7日移動平均', latestAverage ? `${latestAverage.movingAverage.toFixed(2)} kg` : '-', latestAverage?.date ?? '')}
+    ${summaryItem('目標との差', diff === null ? '-' : `${diff > 0 ? '+' : ''}${diff.toFixed(2)} kg`, diff === null ? '' : diff > 0 ? '目標より上' : '目標以下')}
+    ${summaryItem('判定目安', getStatusText(diff), '週単位で見る')}
+  `;
+}
+
+function summaryItem(label, value, sub) {
+  return `
+    <div class="summaryItem">
+      <div class="summaryLabel">${label}</div>
+      <div class="summaryValue">${value}</div>
+      <div class="summarySub">${sub || '&nbsp;'}</div>
+    </div>
+  `;
+}
+
+function getStatusText(diff) {
+  if (diff === null) return '-';
+  if (diff <= 0) return '順調';
+  if (diff <= 1) return 'ほぼ順調';
+  if (diff <= 2) return '様子見';
+  return '見直し候補';
+}
+
+function drawChart() {
+  const showRaw = document.getElementById('showRaw').checked;
+  const baseRows = buildChartRows();
+  const selectedRange = getSelectedDateRange(baseRows);
+  const rows = filterRowsByDateRange(baseRows, selectedRange);
+  const today = parseDate(formatDate(new Date()));
+  const summaryRows = rows.filter(row => parseDate(row.date) <= today);
+  const yAxisMin = calculateYAxisMin(rows);
+  const yAxisMax = calculateYAxisMax(rows);
+  const xAxisLabelStep = getXAxisLabelStep(rows.length);
+
+  renderSummary(summaryRows);
+
+  const ctx = document.getElementById('weightChart');
+
+  if (chart) {
+    chart.destroy();
+  }
+
+  const datasets = [];
+
+  if (showRaw) {
+    datasets.push({
+      label: '実測値[kg]',
+      data: rows.map(row => row.weight),
+      showLine: false,
+      backgroundColor: '#3b82f6',
+      pointBackgroundColor: '#3b82f6',
+      pointBorderColor: '#ffffff',
+      pointBorderWidth: 1.5,
+      pointRadius: 4,
+      pointHoverRadius: 6,
+      borderWidth: 0,
+    });
+  }
+
+  datasets.push(
+    {
+      label: '7日移動平均[kg]',
+      data: rows.map(row => row.movingAverage),
+      spanGaps: true,
+      tension: 0,
+      borderColor: '#14b8a6',
+      backgroundColor: '#14b8a6',
+      borderWidth: 3,
+      pointRadius: 2,
+      pointBackgroundColor: '#14b8a6',
+    },
+    {
+      label: '目標体重[kg]',
+      data: rows
+        .filter(row => typeof row.target === 'number')
+        .map(row => ({ x: row.date, y: Number(row.target.toFixed(2)) })),
+      showLine: true,
+      spanGaps: false,
+      clip: false,
+      tension: 0,
+      borderWidth: 2,
+      borderColor: '#f97316',
+      backgroundColor: '#f97316',
+      pointStyle: 'circle',
+      pointRadius: 6,
+      pointHoverRadius: 8,
+      pointBackgroundColor: '#f97316',
+      pointBorderColor: '#f97316',
+      pointBorderWidth: 1,
+    }
+  );
+
+  chart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: rows.map(row => row.date),
+      datasets,
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: {
+        mode: 'index',
+        intersect: false,
+      },
+      plugins: {
+        legend: {
+          position: 'top',
+        },
+        tooltip: {
+          callbacks: {
+            label(context) {
+              const raw = context.raw;
+              const value = raw && typeof raw === 'object' && 'y' in raw ? raw.y : raw;
+              if (value === null || value === undefined || Number.isNaN(Number(value))) {
+                return `${context.dataset.label}: -`;
+              }
+              return `${context.dataset.label}: ${Number(value).toFixed(2)} kg`;
+            },
+          },
+        },
+      },
+      scales: {
+        x: {
+          ticks: {
+            maxRotation: 0,
+            autoSkip: false,
+            callback(value, index) {
+              const label = rows[index]?.date;
+              if (!label) return '';
+              if (index !== 0 && index !== rows.length - 1 && index % xAxisLabelStep !== 0) {
+                return '';
+              }
+              const [, month, day] = label.split('-');
+              return `${Number(month)}/${Number(day)}`;
+            },
+          },
+          grid: {
+            display: true,
+          },
+        },
+        y: {
+          min: yAxisMin,
+          max: yAxisMax,
+          title: {
+            display: true,
+            text: '体重[kg]',
+          },
+        },
+      },
+    },
+  });
+}
+
+setDefaultDateRangeInputs(buildChartRows());
+document.getElementById('startDate').addEventListener('change', drawChart);
+document.getElementById('endDate').addEventListener('change', drawChart);
+document.getElementById('showRaw').addEventListener('change', drawChart);
+
+drawChart();
