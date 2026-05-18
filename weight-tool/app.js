@@ -281,12 +281,39 @@ function getXAxisLabelStep(totalDays) {
   return 30;
 }
 
-function renderSummary(rows) {
-  const latestWeight = getLatestNonNull(rows, 'weight');
-  const latestAverage = getLatestNonNull(rows, 'movingAverage');
+function isWeekend(dateString) {
+  const day = parseDate(dateString).getDay();
+  return day === 0 || day === 6;
+}
+
+function getNearestFutureWeekendTarget(rows) {
+  const today = parseDate(formatDate(new Date()));
+  for (const row of rows) {
+    const date = parseDate(row.date);
+    if (date < today) continue;
+    if (!isWeekend(row.date)) continue;
+    if (typeof row.targetForDiff !== 'number') continue;
+    return {
+      value: row.targetForDiff,
+      date: row.date,
+    };
+  }
+  return null;
+}
+
+function renderSummary(summaryRows, allRows) {
+  const latestWeight = getLatestNonNull(summaryRows, 'weight');
+  const latestAverage = getLatestNonNull(summaryRows, 'movingAverage');
+  const latestTargetRow = getLatestNonNull(allRows, 'target');
+  const nearestFutureWeekendTarget = getNearestFutureWeekendTarget(allRows);
   const targetAtAverageDate = latestAverage
-    ? rows.find(row => row.date === latestAverage.date)?.targetForDiff
+    ? summaryRows.find(row => row.date === latestAverage.date)?.targetForDiff
     : null;
+  const latestTarget = nearestFutureWeekendTarget
+    ? nearestFutureWeekendTarget
+    : latestTargetRow
+      ? { value: latestTargetRow.target, date: latestTargetRow.date }
+      : null;
 
   const diff = latestAverage && typeof targetAtAverageDate === 'number'
     ? Number((latestAverage.movingAverage - targetAtAverageDate).toFixed(2))
@@ -296,7 +323,8 @@ function renderSummary(rows) {
   summary.innerHTML = `
     ${summaryItem('最新測定値', latestWeight ? `${latestWeight.weight.toFixed(1)} kg` : '-', latestWeight?.date ?? '')}
     ${summaryItem('7日移動平均', latestAverage ? `${latestAverage.movingAverage.toFixed(2)} kg` : '-', latestAverage?.date ?? '')}
-    ${summaryItem('目標との差', diff === null ? '-' : `${diff > 0 ? '+' : ''}${diff.toFixed(2)} kg`, diff === null ? '' : diff > 0 ? '目標より上' : '目標以下')}
+    ${summaryItem('目標との差(現在日換算)', diff === null ? '-' : `${diff > 0 ? '+' : ''}${diff.toFixed(2)} kg`, diff === null ? '' : diff > 0 ? '目標より上' : '目標以下')}
+    ${summaryItem('直近の目標値', latestTarget ? `${latestTarget.value.toFixed(2)} kg` : '-', latestTarget?.date ?? '')}
     ${summaryItem('判定目安', getStatusText(diff), '週単位で見る')}
   `;
 }
@@ -330,7 +358,7 @@ function drawChart() {
   const yAxisMax = calculateYAxisMax(rows);
   const xAxisLabelStep = getXAxisLabelStep(rows.length);
 
-  renderSummary(summaryRows);
+  renderSummary(summaryRows, rows);
 
   const ctx = document.getElementById('weightChart');
 
@@ -344,14 +372,17 @@ function drawChart() {
     datasets.push({
       label: '実測値[kg]',
       data: rows.map(row => row.weight),
-      showLine: false,
+      showLine: true,
+      spanGaps: true,
+      tension: 0,
+      borderColor: '#3b82f6',
       backgroundColor: '#3b82f6',
       pointBackgroundColor: '#3b82f6',
       pointBorderColor: '#ffffff',
       pointBorderWidth: 1.5,
       pointRadius: 4,
       pointHoverRadius: 6,
-      borderWidth: 0,
+      borderWidth: 2,
     });
   }
 
