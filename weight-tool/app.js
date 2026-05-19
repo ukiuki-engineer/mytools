@@ -11,14 +11,14 @@ const CONFIG = {
 let chart = null;
 
 function parseDate(dateString) {
-  const [year, month, day] = dateString.split('-').map(Number);
+  const [year, month, day] = dateString.split("-").map(Number);
   return new Date(year, month - 1, day);
 }
 
 function formatDate(date) {
   const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
   return `${year}-${month}-${day}`;
 }
 
@@ -37,7 +37,8 @@ function getMonthEnd(date) {
 }
 
 function diffDays(a, b) {
-  const ms = parseDate(formatDate(a)).getTime() - parseDate(formatDate(b)).getTime();
+  const ms =
+    parseDate(formatDate(a)).getTime() - parseDate(formatDate(b)).getTime();
   return Math.round(ms / 86400000);
 }
 
@@ -46,7 +47,9 @@ function sortRecords(records) {
 }
 
 function getDateRange(weightRecords, targetRecords) {
-  const dates = [...weightRecords, ...targetRecords].map(row => parseDate(row.date));
+  const dates = [...weightRecords, ...targetRecords].map((row) =>
+    parseDate(row.date),
+  );
   const min = new Date(Math.min(...dates));
   const max = new Date(Math.max(...dates));
   const today = parseDate(formatDate(new Date()));
@@ -64,7 +67,7 @@ function buildDailyDates(start, end) {
 function makeWeightMap(records) {
   const map = new Map();
   for (const row of records) {
-    if (row.date && typeof row.weight === 'number') {
+    if (row.date && typeof row.weight === "number") {
       map.set(row.date, row.weight);
     }
   }
@@ -74,7 +77,7 @@ function makeWeightMap(records) {
 function makeTargetMap(records) {
   const map = new Map();
   for (const row of records) {
-    if (row.date && typeof row.weight === 'number') {
+    if (row.date && typeof row.weight === "number") {
       map.set(row.date, row.weight);
     }
   }
@@ -143,7 +146,7 @@ function buildChartRows() {
   const range = getDateRange(weightRecords, targetRecords);
   const dates = buildDailyDates(range.min, range.max);
 
-  return dates.map(date => ({
+  return dates.map((date) => ({
     date,
     weight: weightMap.get(date) ?? null,
     movingAverage: calculateMovingAverage(date, weightMap),
@@ -166,8 +169,8 @@ function setDefaultDateRangeInputs(rows) {
   const bounds = getDateBounds(rows);
   if (!bounds) return;
 
-  const startInput = document.getElementById('startDate');
-  const endInput = document.getElementById('endDate');
+  const startInput = document.getElementById("startDate");
+  const endInput = document.getElementById("endDate");
   const minDateString = formatDate(bounds.min);
   const maxDateString = formatDate(bounds.max);
 
@@ -197,9 +200,10 @@ function getSelectedDateRange(rows) {
   const bounds = getDateBounds(rows);
   if (!bounds) return null;
 
-  const startInput = document.getElementById('startDate');
-  const endInput = document.getElementById('endDate');
-  const startValue = startInput.value || startInput.min || formatDate(bounds.min);
+  const startInput = document.getElementById("startDate");
+  const endInput = document.getElementById("endDate");
+  const startValue =
+    startInput.value || startInput.min || formatDate(bounds.min);
   const endValue = endInput.value || endInput.max || formatDate(bounds.max);
   let startDate = parseDate(startValue);
   let endDate = parseDate(endValue);
@@ -228,7 +232,7 @@ function filterRowsByDateRange(rows, range) {
   if (rows.length === 0) return rows;
   if (!range) return rows;
 
-  return rows.filter(row => {
+  return rows.filter((row) => {
     const date = parseDate(row.date);
     return date >= range.startDate && date <= range.endDate;
   });
@@ -246,9 +250,9 @@ function getLatestNonNull(rows, key) {
 function calculateYAxisMin(rows) {
   const values = [];
   for (const row of rows) {
-    if (typeof row.weight === 'number') values.push(row.weight);
-    if (typeof row.movingAverage === 'number') values.push(row.movingAverage);
-    if (typeof row.target === 'number') values.push(row.target);
+    if (typeof row.weight === "number") values.push(row.weight);
+    if (typeof row.movingAverage === "number") values.push(row.movingAverage);
+    if (typeof row.target === "number") values.push(row.target);
   }
 
   if (values.length === 0) return undefined;
@@ -261,9 +265,9 @@ function calculateYAxisMin(rows) {
 function calculateYAxisMax(rows) {
   const values = [];
   for (const row of rows) {
-    if (typeof row.weight === 'number') values.push(row.weight);
-    if (typeof row.movingAverage === 'number') values.push(row.movingAverage);
-    if (typeof row.target === 'number') values.push(row.target);
+    if (typeof row.weight === "number") values.push(row.weight);
+    if (typeof row.movingAverage === "number") values.push(row.movingAverage);
+    if (typeof row.target === "number") values.push(row.target);
   }
 
   if (values.length === 0) return undefined;
@@ -281,6 +285,20 @@ function getXAxisLabelStep(totalDays) {
   return 30;
 }
 
+function getXAxisGridStep(totalDays) {
+  const targetGridLineCount = 22;
+  const rawStep = Math.ceil(totalDays / targetGridLineCount);
+  const candidates = [1, 2, 3, 5, 7, 10, 14, 21, 30, 45, 60, 90];
+  for (const step of candidates) {
+    if (rawStep <= step) return step;
+  }
+  return rawStep;
+}
+
+function shouldShowXAxisGridLine(index, totalDays, step) {
+  return index === 0 || index === totalDays - 1 || index % step === 0;
+}
+
 function isWeekend(dateString) {
   const day = parseDate(dateString).getDay();
   return day === 0 || day === 6;
@@ -292,7 +310,7 @@ function getNearestFutureWeekendTarget(rows) {
     const date = parseDate(row.date);
     if (date < today) continue;
     if (!isWeekend(row.date)) continue;
-    if (typeof row.targetForDiff !== 'number') continue;
+    if (typeof row.targetForDiff !== "number") continue;
     return {
       value: row.targetForDiff,
       date: row.date,
@@ -301,13 +319,29 @@ function getNearestFutureWeekendTarget(rows) {
   return null;
 }
 
+function getCurrentMonthTarget() {
+  const targetRecords = sortRecords(TARGET_RECORDS || []);
+  if (targetRecords.length === 0) return null;
+
+  const today = parseDate(formatDate(new Date()));
+  const monthEndDateString = formatDate(getMonthEnd(today));
+  const value = interpolateTarget(monthEndDateString, targetRecords);
+  if (typeof value !== "number" || Number.isNaN(value)) return null;
+
+  return {
+    value: Number(value.toFixed(2)),
+    date: monthEndDateString,
+  };
+}
+
 function renderSummary(summaryRows, allRows) {
-  const latestWeight = getLatestNonNull(summaryRows, 'weight');
-  const latestAverage = getLatestNonNull(summaryRows, 'movingAverage');
-  const latestTargetRow = getLatestNonNull(allRows, 'target');
+  const latestWeight = getLatestNonNull(summaryRows, "weight");
+  const latestAverage = getLatestNonNull(summaryRows, "movingAverage");
+  const latestTargetRow = getLatestNonNull(allRows, "target");
   const nearestFutureWeekendTarget = getNearestFutureWeekendTarget(allRows);
+  const currentMonthTarget = getCurrentMonthTarget();
   const targetAtAverageDate = latestAverage
-    ? summaryRows.find(row => row.date === latestAverage.date)?.targetForDiff
+    ? summaryRows.find((row) => row.date === latestAverage.date)?.targetForDiff
     : null;
   const latestTarget = nearestFutureWeekendTarget
     ? nearestFutureWeekendTarget
@@ -315,17 +349,19 @@ function renderSummary(summaryRows, allRows) {
       ? { value: latestTargetRow.target, date: latestTargetRow.date }
       : null;
 
-  const diff = latestAverage && typeof targetAtAverageDate === 'number'
-    ? Number((latestAverage.movingAverage - targetAtAverageDate).toFixed(2))
-    : null;
+  const diff =
+    latestAverage && typeof targetAtAverageDate === "number"
+      ? Number((latestAverage.movingAverage - targetAtAverageDate).toFixed(2))
+      : null;
 
-  const summary = document.getElementById('summary');
+  const summary = document.getElementById("summary");
   summary.innerHTML = `
-    ${summaryItem('最新測定値', latestWeight ? `${latestWeight.weight.toFixed(1)} kg` : '-', latestWeight?.date ?? '')}
-    ${summaryItem('7日移動平均', latestAverage ? `${latestAverage.movingAverage.toFixed(2)} kg` : '-', latestAverage?.date ?? '')}
-    ${summaryItem('目標との差(現在日換算)', diff === null ? '-' : `${diff > 0 ? '+' : ''}${diff.toFixed(2)} kg`, diff === null ? '' : diff > 0 ? '目標より上' : '目標以下')}
-    ${summaryItem('直近の目標値', latestTarget ? `${latestTarget.value.toFixed(2)} kg` : '-', latestTarget?.date ?? '')}
-    ${summaryItem('判定目安', getStatusText(diff), '週単位で見る')}
+    ${summaryItem("最新測定値", latestWeight ? `${latestWeight.weight.toFixed(1)} kg` : "-", latestWeight?.date ?? "")}
+    ${summaryItem("7日移動平均", latestAverage ? `${latestAverage.movingAverage.toFixed(2)} kg` : "-", latestAverage?.date ?? "")}
+    ${summaryItem("目標差(現在日換算)", diff === null ? "-" : `${diff > 0 ? "+" : ""}${diff.toFixed(2)} kg`, diff === null ? "" : diff > 0 ? "目標より上" : "目標以下")}
+    ${summaryItem("直近の目標値", latestTarget ? `${latestTarget.value.toFixed(2)} kg` : "-", latestTarget?.date ?? "")}
+    ${summaryItem("今月の目標", currentMonthTarget ? `${currentMonthTarget.value.toFixed(2)} kg` : "-", currentMonthTarget?.date ?? "")}
+    ${summaryItem("判定目安", getStatusText(diff), "週単位で見る")}
   `;
 }
 
@@ -334,33 +370,34 @@ function summaryItem(label, value, sub) {
     <div class="summaryItem">
       <div class="summaryLabel">${label}</div>
       <div class="summaryValue">${value}</div>
-      <div class="summarySub">${sub || '&nbsp;'}</div>
+      <div class="summarySub">${sub || "&nbsp;"}</div>
     </div>
   `;
 }
 
 function getStatusText(diff) {
-  if (diff === null) return '-';
-  if (diff <= 0) return '順調';
-  if (diff <= 1) return 'ほぼ順調';
-  if (diff <= 2) return '様子見';
-  return '見直し候補';
+  if (diff === null) return "-";
+  if (diff <= 0) return "順調";
+  if (diff <= 1) return "ほぼ順調";
+  if (diff <= 2) return "様子見";
+  return "見直し候補";
 }
 
 function drawChart() {
-  const showRaw = document.getElementById('showRaw').checked;
+  const showRaw = document.getElementById("showRaw").checked;
   const baseRows = buildChartRows();
   const selectedRange = getSelectedDateRange(baseRows);
   const rows = filterRowsByDateRange(baseRows, selectedRange);
   const today = parseDate(formatDate(new Date()));
-  const summaryRows = rows.filter(row => parseDate(row.date) <= today);
+  const summaryRows = rows.filter((row) => parseDate(row.date) <= today);
   const yAxisMin = calculateYAxisMin(rows);
   const yAxisMax = calculateYAxisMax(rows);
   const xAxisLabelStep = getXAxisLabelStep(rows.length);
+  const xAxisGridStep = getXAxisGridStep(rows.length);
 
   renderSummary(summaryRows, rows);
 
-  const ctx = document.getElementById('weightChart');
+  const ctx = document.getElementById("weightChart");
 
   if (chart) {
     chart.destroy();
@@ -370,15 +407,15 @@ function drawChart() {
 
   if (showRaw) {
     datasets.push({
-      label: '実測値[kg]',
-      data: rows.map(row => row.weight),
+      label: "実測値[kg]",
+      data: rows.map((row) => row.weight),
       showLine: true,
       spanGaps: true,
       tension: 0,
-      borderColor: '#3b82f6',
-      backgroundColor: '#3b82f6',
-      pointBackgroundColor: '#3b82f6',
-      pointBorderColor: '#ffffff',
+      borderColor: "#3b82f6",
+      backgroundColor: "#3b82f6",
+      pointBackgroundColor: "#3b82f6",
+      pointBorderColor: "#ffffff",
       pointBorderWidth: 1.5,
       pointRadius: 4,
       pointHoverRadius: 6,
@@ -388,60 +425,65 @@ function drawChart() {
 
   datasets.push(
     {
-      label: '7日移動平均[kg]',
-      data: rows.map(row => row.movingAverage),
+      label: "7日移動平均[kg]",
+      data: rows.map((row) => row.movingAverage),
       spanGaps: true,
       tension: 0,
-      borderColor: '#14b8a6',
-      backgroundColor: '#14b8a6',
+      borderColor: "#14b8a6",
+      backgroundColor: "#14b8a6",
       borderWidth: 3,
       pointRadius: 2,
-      pointBackgroundColor: '#14b8a6',
+      pointBackgroundColor: "#14b8a6",
     },
     {
-      label: '目標体重[kg]',
+      label: "目標体重[kg]",
       data: rows
-        .filter(row => typeof row.target === 'number')
-        .map(row => ({ x: row.date, y: Number(row.target.toFixed(2)) })),
+        .filter((row) => typeof row.target === "number")
+        .map((row) => ({ x: row.date, y: Number(row.target.toFixed(2)) })),
       showLine: true,
       spanGaps: false,
       clip: false,
       tension: 0,
       borderWidth: 2,
-      borderColor: '#f97316',
-      backgroundColor: '#f97316',
-      pointStyle: 'circle',
+      borderColor: "#f97316",
+      backgroundColor: "#f97316",
+      pointStyle: "circle",
       pointRadius: 6,
       pointHoverRadius: 8,
-      pointBackgroundColor: '#f97316',
-      pointBorderColor: '#f97316',
+      pointBackgroundColor: "#f97316",
+      pointBorderColor: "#f97316",
       pointBorderWidth: 1,
-    }
+    },
   );
 
   chart = new Chart(ctx, {
-    type: 'line',
+    type: "line",
     data: {
-      labels: rows.map(row => row.date),
+      labels: rows.map((row) => row.date),
       datasets,
     },
     options: {
       responsive: true,
       maintainAspectRatio: false,
       interaction: {
-        mode: 'index',
+        mode: "index",
         intersect: false,
       },
       plugins: {
         legend: {
-          position: 'top',
+          position: "top",
         },
         tooltip: {
           callbacks: {
             label(context) {
               const raw = context.raw;
-              const value = raw && typeof raw === 'object' && 'y' in raw ? raw.y : raw;
-              if (value === null || value === undefined || Number.isNaN(Number(value))) {
+              const value =
+                raw && typeof raw === "object" && "y" in raw ? raw.y : raw;
+              if (
+                value === null ||
+                value === undefined ||
+                Number.isNaN(Number(value))
+              ) {
                 return `${context.dataset.label}: -`;
               }
               return `${context.dataset.label}: ${Number(value).toFixed(2)} kg`;
@@ -456,16 +498,36 @@ function drawChart() {
             autoSkip: false,
             callback(value, index) {
               const label = rows[index]?.date;
-              if (!label) return '';
-              if (index !== 0 && index !== rows.length - 1 && index % xAxisLabelStep !== 0) {
-                return '';
+              if (!label) return "";
+              if (
+                index !== 0 &&
+                index !== rows.length - 1 &&
+                index % xAxisLabelStep !== 0
+              ) {
+                return "";
               }
-              const [, month, day] = label.split('-');
+              const [, month, day] = label.split("-");
               return `${Number(month)}/${Number(day)}`;
             },
           },
           grid: {
             display: true,
+            color(context) {
+              const index =
+                typeof context.index === "number" ? context.index : -1;
+              if (index < 0) return "rgba(148, 163, 184, 0.28)";
+              return shouldShowXAxisGridLine(index, rows.length, xAxisGridStep)
+                ? "rgba(148, 163, 184, 0.28)"
+                : "rgba(0, 0, 0, 0)";
+            },
+            lineWidth(context) {
+              const index =
+                typeof context.index === "number" ? context.index : -1;
+              if (index < 0) return 1;
+              return shouldShowXAxisGridLine(index, rows.length, xAxisGridStep)
+                ? 1
+                : 0;
+            },
           },
         },
         y: {
@@ -473,7 +535,7 @@ function drawChart() {
           max: yAxisMax,
           title: {
             display: true,
-            text: '体重[kg]',
+            text: "体重[kg]",
           },
         },
       },
@@ -482,8 +544,8 @@ function drawChart() {
 }
 
 setDefaultDateRangeInputs(buildChartRows());
-document.getElementById('startDate').addEventListener('change', drawChart);
-document.getElementById('endDate').addEventListener('change', drawChart);
-document.getElementById('showRaw').addEventListener('change', drawChart);
+document.getElementById("startDate").addEventListener("change", drawChart);
+document.getElementById("endDate").addEventListener("change", drawChart);
+document.getElementById("showRaw").addEventListener("change", drawChart);
 
 drawChart();
