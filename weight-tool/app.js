@@ -36,6 +36,10 @@ function getMonthEnd(date) {
   return new Date(date.getFullYear(), date.getMonth() + 1, 0);
 }
 
+function getPreviousMonthEnd(date) {
+  return addDays(getMonthStart(date), -1);
+}
+
 function diffDays(a, b) {
   const ms =
     parseDate(formatDate(a)).getTime() - parseDate(formatDate(b)).getTime();
@@ -180,7 +184,7 @@ function setDefaultDateRangeInputs(rows) {
   endInput.max = maxDateString;
 
   const today = parseDate(formatDate(new Date()));
-  let defaultStart = getMonthStart(today);
+  let defaultStart = getPreviousMonthEnd(today);
   let defaultEnd = getMonthEnd(today);
 
   if (defaultStart < bounds.min) defaultStart = bounds.min;
@@ -247,13 +251,36 @@ function getLatestNonNull(rows, key) {
   return null;
 }
 
-function calculateYAxisMin(rows) {
+function getVisibleSeries() {
+  return {
+    raw: document.getElementById("showRaw").checked,
+    movingAverage: document.getElementById("showMovingAverage").checked,
+    target: document.getElementById("showTarget").checked,
+  };
+}
+
+function collectVisibleValues(rows, visibleSeries) {
   const values = [];
   for (const row of rows) {
-    if (typeof row.weight === "number") values.push(row.weight);
-    if (typeof row.movingAverage === "number") values.push(row.movingAverage);
-    if (typeof row.target === "number") values.push(row.target);
+    if (visibleSeries.raw && typeof row.weight === "number") {
+      values.push(row.weight);
+    }
+    if (
+      visibleSeries.movingAverage &&
+      typeof row.movingAverage === "number"
+    ) {
+      values.push(row.movingAverage);
+    }
+    if (visibleSeries.target && typeof row.target === "number") {
+      values.push(row.target);
+    }
   }
+
+  return values;
+}
+
+function calculateYAxisMin(rows, visibleSeries) {
+  const values = collectVisibleValues(rows, visibleSeries);
 
   if (values.length === 0) return undefined;
 
@@ -262,13 +289,8 @@ function calculateYAxisMin(rows) {
   return Math.floor(paddedMin / CONFIG.yAxisMinStepKg) * CONFIG.yAxisMinStepKg;
 }
 
-function calculateYAxisMax(rows) {
-  const values = [];
-  for (const row of rows) {
-    if (typeof row.weight === "number") values.push(row.weight);
-    if (typeof row.movingAverage === "number") values.push(row.movingAverage);
-    if (typeof row.target === "number") values.push(row.target);
-  }
+function calculateYAxisMax(rows, visibleSeries) {
+  const values = collectVisibleValues(rows, visibleSeries);
 
   if (values.length === 0) return undefined;
 
@@ -384,14 +406,14 @@ function getStatusText(diff) {
 }
 
 function drawChart() {
-  const showRaw = document.getElementById("showRaw").checked;
+  const visibleSeries = getVisibleSeries();
   const baseRows = buildChartRows();
   const selectedRange = getSelectedDateRange(baseRows);
   const rows = filterRowsByDateRange(baseRows, selectedRange);
   const today = parseDate(formatDate(new Date()));
   const summaryRows = rows.filter((row) => parseDate(row.date) <= today);
-  const yAxisMin = calculateYAxisMin(rows);
-  const yAxisMax = calculateYAxisMax(rows);
+  const yAxisMin = calculateYAxisMin(rows, visibleSeries);
+  const yAxisMax = calculateYAxisMax(rows, visibleSeries);
   const xAxisLabelStep = getXAxisLabelStep(rows.length);
   const xAxisGridStep = getXAxisGridStep(rows.length);
 
@@ -405,7 +427,7 @@ function drawChart() {
 
   const datasets = [];
 
-  if (showRaw) {
+  if (visibleSeries.raw) {
     datasets.push({
       label: "実測値[kg]",
       data: rows.map((row) => row.weight),
@@ -423,8 +445,8 @@ function drawChart() {
     });
   }
 
-  datasets.push(
-    {
+  if (visibleSeries.movingAverage) {
+    datasets.push({
       label: "7日移動平均[kg]",
       data: rows.map((row) => row.movingAverage),
       spanGaps: true,
@@ -434,8 +456,11 @@ function drawChart() {
       borderWidth: 3,
       pointRadius: 2,
       pointBackgroundColor: "#14b8a6",
-    },
-    {
+    });
+  }
+
+  if (visibleSeries.target) {
+    datasets.push({
       label: "目標体重[kg]",
       data: rows
         .filter((row) => typeof row.target === "number")
@@ -453,8 +478,8 @@ function drawChart() {
       pointBackgroundColor: "#f97316",
       pointBorderColor: "#f97316",
       pointBorderWidth: 1,
-    },
-  );
+    });
+  }
 
   chart = new Chart(ctx, {
     type: "line",
@@ -547,5 +572,9 @@ setDefaultDateRangeInputs(buildChartRows());
 document.getElementById("startDate").addEventListener("change", drawChart);
 document.getElementById("endDate").addEventListener("change", drawChart);
 document.getElementById("showRaw").addEventListener("change", drawChart);
+document
+  .getElementById("showMovingAverage")
+  .addEventListener("change", drawChart);
+document.getElementById("showTarget").addEventListener("change", drawChart);
 
 drawChart();
